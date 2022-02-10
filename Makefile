@@ -14,13 +14,23 @@ install: bin/stanc stan/src/stan/version.hpp stan/lib/stan_math/stan/math/versio
 	@echo 'Installation complete' 
 
 uninstall:
+	$(RM) bin/stanc
+	@echo
 	@echo 'uninstall'
 
 clean:
-	$(RM) bin/stanc
+	@echo
+	@echo 'clean'
 
 check:
-	@echo 'check'
+	@ n=0; \
+	test -f bin/stanc || { echo 'Error: bin/stanc does not exist'; ((n++)); } ; \
+	test -f stan/src/stan/version.hpp || { echo 'Error: Stan submodule needs to be updated'; ((n++)); }; \
+	test -f stan/lib/stan_math/stan/math/version.hpp || { echo 'Error: Stan Math submodule needs to be updated'; ((n++)); }; \
+	if [ $$n -gt 0 ]; then echo; echo 'Please run `make install`'; echo; exit 1; fi
+	@echo
+	@echo 'Check: All checks pass'
+
 
 
 bin/stanc: OS ?= $(shell uname -s)
@@ -36,7 +46,6 @@ bin/stanc:
 
 stan/src/stan/version.hpp:
 	git submodule update --init --depth 1
-
 
 stan/lib/stan_math/stan/math/version.hpp: stan/src/stan/version.hpp
 	cd stan && git submodule update --init --depth 1

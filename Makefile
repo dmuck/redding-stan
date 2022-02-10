@@ -6,6 +6,12 @@ PHONY: help all install uninstall clean check
 STAN_VERSION = v2.29.0-rc2
 STANCFLAGS ?= --warn-pedantic
 
+CXXFLAGS = -I stan/src -I stan/lib/stan_math
+CXXFLAGS += -I stan/lib/stan_math/lib/eigen_3.3.9 -I stan/lib/stan_math/lib/boost_1.75.0
+CXXFLAGS += -I stan/lib/stan_math/lib/sundials_6.0.0/include -I stan/lib/stan_math/lib/tbb_2020.3/include
+CXXFLAGS += -std=c++14
+CXXFLAGS += -D_REENTRANT
+
 help:
 	@echo '--------------------------------------------------------------------------------'
 	@echo '--------------------------------------------------------------------------------'
@@ -55,5 +61,7 @@ stan/src/stan/version.hpp:
 stan/lib/stan_math/stan/math/version.hpp: stan/src/stan/version.hpp
 	cd stan && git submodule update --init --depth 1
 
-%.hpp: %.stan bin/stanc
+%.cpp: %.stan bin/stanc
 	bin/stanc $< --o $@
+
+

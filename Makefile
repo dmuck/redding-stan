@@ -3,7 +3,8 @@ help: ## First target is the default make target
 
 PHONY: help all install uninstall clean check
 
-STAN_VERSION=v2.29.0-rc2
+STAN_VERSION = v2.29.0-rc2
+STANCFLAGS ?= --warn-pedantic
 
 help:
 	@echo '--------------------------------------------------------------------------------'
@@ -53,3 +54,6 @@ stan/src/stan/version.hpp:
 
 stan/lib/stan_math/stan/math/version.hpp: stan/src/stan/version.hpp
 	cd stan && git submodule update --init --depth 1
+
+%.hpp: %.stan bin/stanc
+	bin/stanc $< --o $@

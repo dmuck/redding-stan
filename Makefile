@@ -1,3 +1,6 @@
+help: ## First target is the default make target
+
+
 PHONY: help all install uninstall clean check
 
 STAN_VERSION=v2.29.0-rc2
@@ -5,6 +8,7 @@ STAN_VERSION=v2.29.0-rc2
 help:
 	@echo '--------------------------------------------------------------------------------'
 	@echo '--------------------------------------------------------------------------------'
+
 
 all:
 	@echo 'all'

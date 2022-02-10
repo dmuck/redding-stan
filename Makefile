@@ -11,6 +11,7 @@ CXXFLAGS += -I stan/lib/stan_math/lib/eigen_3.3.9 -I stan/lib/stan_math/lib/boos
 CXXFLAGS += -I stan/lib/stan_math/lib/sundials_6.0.0/include -I stan/lib/stan_math/lib/tbb_2020.3/include
 CXXFLAGS += -std=c++14
 CXXFLAGS += -D_REENTRANT
+CXXFLAGS += -O3
 
 help:
 	@echo '--------------------------------------------------------------------------------'

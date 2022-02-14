@@ -56,9 +56,9 @@ clean:
 
 check:
 	@ n=0; \
-	test -f bin/stanc || { echo 'Error: bin/stanc does not exist'; ((n++)); } ; \
-	test -f stan/src/stan/version.hpp || { echo 'Error: Stan submodule needs to be updated'; ((n++)); }; \
-	test -f stan/lib/stan_math/stan/math/version.hpp || { echo 'Error: Stan Math submodule needs to be updated'; ((n++)); }; \
+	test -f bin/stanc || { echo 'Error: bin/stanc does not exist'; ((n++)); } && echo '* bin/stanc ok' ; \
+	test -f stan/src/stan/version.hpp || { echo 'Error: Stan submodule needs to be updated'; ((n++)); } && echo '* Stan submodule ok' ; \
+	test -f stan/lib/stan_math/stan/math/version.hpp || { echo 'Error: Stan Math submodule needs to be updated'; ((n++)); } && echo '* Stan Math submodule ok' ; \
 	if [ $$n -gt 0 ]; then echo; echo 'Please run `make install`'; echo; exit 1; fi
 	@echo
 	@echo 'Check: All checks pass'

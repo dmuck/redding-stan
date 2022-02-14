@@ -13,6 +13,16 @@ CXXFLAGS += -std=c++14
 CXXFLAGS += -D_REENTRANT
 CXXFLAGS += -O3
 
+LDLIBS = src/main.o
+
+MATH := stan/lib/stan_math
+
+OS ?= $(shell uname -s)
+OS_TAG ?= $(strip $(if $(filter Darwin,$(OS)), mac, linux))
+TBB_LIBRARIES = $(if $(filter linux,$(OS_TAG)),tbb,tbb tbbmalloc tbbmalloc_proxy)
+TBB_LIBRARIES := $(TBB_LIBRARIES:%=$(MATH)/lib/tbb/lib%.dylib)
+
+
 help:
 	@echo '--------------------------------------------------------------------------------'
 	@echo '--------------------------------------------------------------------------------'
@@ -21,12 +31,25 @@ help:
 all:
 	@echo 'all'
 
-install: bin/stanc stan/src/stan/version.hpp stan/lib/stan_math/stan/math/version.hpp
+#ifeq ($(OS),Darwin)
+#  TBB_LIBRARIES ?= tbb tbbmalloc tbbmalloc_proxy
+#else
+#  TBB_LIBRARIES ?= tbb
+#endif
+
+install: bin/stanc stan/src/stan/version.hpp $(MATH)/stan/math/version.hpp src/main.o
+install: $(TBB_LIBRARIES)
+install:
 	@echo
-	@echo 'Installation complete' 
+	@echo 'Installation complete'
+
+$(MATH)/lib/tbb/lib%.dylib: LIB = $(patsubst $(MATH)/%,%,$@)
+$(MATH)/lib/tbb/lib%.dylib: $(MATH)/stan/math/version.hpp
+	$(MAKE) -C $(MATH) $(LIB)
 
 uninstall:
 	$(RM) bin/stanc
+	$(MAKE) -C $(MATH) clean-libraries
 	@echo
 	@echo 'uninstall'
 
@@ -45,8 +68,6 @@ check:
 
 
 
-bin/stanc: OS ?= $(shell uname -s)
-bin/stanc: OS_TAG = $(strip $(if $(filter Darwin,$(OS)), mac, linux))
 bin/stanc: URL = github.com/stan-dev/stanc3/releases/download
 bin/stanc:
 	@echo '* downloading stanc $(STAN_VERSION) for $(OS_TAG)'
@@ -64,5 +85,3 @@ stan/lib/stan_math/stan/math/version.hpp: stan/src/stan/version.hpp
 
 %.cpp: %.stan bin/stanc
 	bin/stanc $< --o $@
-
-

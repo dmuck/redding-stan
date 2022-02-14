@@ -80,7 +80,7 @@ stan/src/stan/version.hpp:
 stan/lib/stan_math/stan/math/version.hpp: stan/src/stan/version.hpp
 	cd stan && git submodule update --init --depth 1
 
-%.cpp: %.stan bin/stanc
+%.cpp: %.stan bin/stanc src/main.o
 	bin/stanc $< --o $@
 
 $(MATH)/lib/tbb/lib%.dylib: LIB = $(patsubst $(MATH)/%,%,$@)

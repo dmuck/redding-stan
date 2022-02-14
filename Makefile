@@ -13,7 +13,6 @@ CXXFLAGS += -std=c++14
 CXXFLAGS += -D_REENTRANT
 CXXFLAGS += -O3
 
-LDLIBS = src/main.o
 
 MATH := stan/lib/stan_math
 
@@ -22,6 +21,8 @@ OS_TAG ?= $(strip $(if $(filter Darwin,$(OS)), mac, linux))
 TBB_LIBRARIES = $(if $(filter linux,$(OS_TAG)),tbb,tbb tbbmalloc tbbmalloc_proxy)
 TBB_LIBRARIES := $(TBB_LIBRARIES:%=$(MATH)/lib/tbb/lib%.dylib)
 
+LDLIBS = src/main.o $(TBB_LIBRARIES) -Wl,-L,$(MATH)/lib/tbb -Wl,-rpath,$(MATH)/lib/tbb
+LINK.o = $(LINK.cpp)
 
 help:
 	@echo '--------------------------------------------------------------------------------'
@@ -42,10 +43,6 @@ install: $(TBB_LIBRARIES)
 install:
 	@echo
 	@echo 'Installation complete'
-
-$(MATH)/lib/tbb/lib%.dylib: LIB = $(patsubst $(MATH)/%,%,$@)
-$(MATH)/lib/tbb/lib%.dylib: $(MATH)/stan/math/version.hpp
-	$(MAKE) -C $(MATH) $(LIB)
 
 uninstall:
 	$(RM) bin/stanc
@@ -85,3 +82,8 @@ stan/lib/stan_math/stan/math/version.hpp: stan/src/stan/version.hpp
 
 %.cpp: %.stan bin/stanc
 	bin/stanc $< --o $@
+
+$(MATH)/lib/tbb/lib%.dylib: LIB = $(patsubst $(MATH)/%,%,$@)
+$(MATH)/lib/tbb/lib%.dylib: $(MATH)/stan/math/version.hpp
+	$(MAKE) -C $(MATH) $(LIB)
+

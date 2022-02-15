@@ -18,8 +18,9 @@ MATH := stan/lib/stan_math
 
 OS ?= $(shell uname -s)
 OS_TAG ?= $(strip $(if $(filter Darwin,$(OS)), mac, linux))
+LIBRARY_SUFFIX = $(if $(filter linux,$(OS_TAG)),so.2,dylib)
 TBB_LIBRARIES = $(if $(filter linux,$(OS_TAG)),tbb,tbb tbbmalloc tbbmalloc_proxy)
-TBB_LIBRARIES := $(TBB_LIBRARIES:%=$(MATH)/lib/tbb/lib%.dylib)
+TBB_LIBRARIES := $(TBB_LIBRARIES:%=$(MATH)/lib/tbb/lib%.$(LIBRARY_SUFFIX))
 
 LDLIBS = src/main.o $(TBB_LIBRARIES) -Wl,-L,$(MATH)/lib/tbb -Wl,-rpath,$(MATH)/lib/tbb
 LINK.o = $(LINK.cpp)
@@ -83,7 +84,7 @@ stan/lib/stan_math/stan/math/version.hpp: stan/src/stan/version.hpp
 %.cpp: %.stan bin/stanc src/main.o
 	bin/stanc $< --o $@
 
-$(MATH)/lib/tbb/lib%.dylib: LIB = $(patsubst $(MATH)/%,%,$@)
-$(MATH)/lib/tbb/lib%.dylib: $(MATH)/stan/math/version.hpp
+$(MATH)/lib/tbb/lib%: LIB = $(patsubst $(MATH)/%,%,$@)
+$(MATH)/lib/tbb/lib%: $(MATH)/stan/math/version.hpp
 	$(MAKE) -C $(MATH) $(LIB)
 

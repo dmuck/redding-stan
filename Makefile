@@ -33,12 +33,6 @@ help:
 all:
 	@echo 'all'
 
-#ifeq ($(OS),Darwin)
-#  TBB_LIBRARIES ?= tbb tbbmalloc tbbmalloc_proxy
-#else
-#  TBB_LIBRARIES ?= tbb
-#endif
-
 install: bin/stanc stan/src/stan/version.hpp $(MATH)/stan/math/version.hpp src/main.o
 install: $(TBB_LIBRARIES)
 install:

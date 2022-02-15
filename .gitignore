@@ -3,5 +3,5 @@
 /bin/stanc
 /bin/stanc.exe
 
-
+*.o
 

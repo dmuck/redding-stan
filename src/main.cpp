@@ -40,9 +40,23 @@ int main(int argc, char* argv[]) {
   std::cout << " * num_params_r: " << num_params_r << std::endl;
   std::cout << " * num_params_i: " << num_params_i << std::endl;
 
-  Eigen::Matrix<stan::math::var, -1, 1> parameters = Eigen::VectorXd::Random(num_params_r);
-  std::cout << " * parameters = " << parameters << std::endl;
-  
+  // logic from Math's stan/math/rev/functor/gradient.hpp
 
+  Eigen::Matrix<stan::math::var, -1, 1> parameters = Eigen::MatrixXd::Random(num_params_r, 1);
+  std::cout << " * parameters = " << parameters << std::endl;
+
+  std::stringstream msg;
+  stan::math::var lp = model.log_prob_propto_jacobian(parameters, &msg);
+
+  double lp_val = lp.val();
+  stan::math::grad(lp.vi_);
+  Eigen::VectorXd gradient = parameters.adj();
+  
+  std::cout << "------------------------------------------------------------" << std::endl;
+  std::cout << " * log prob propto jacobian of parameters: " << lp_val << std::endl;
+  std::cout << " * gradient! " << gradient << std::endl;
+  std::cout << " * message while evaluating log prob: \"" << msg.str() << "\"" << std::endl;
+
+  
   return 0;
 }

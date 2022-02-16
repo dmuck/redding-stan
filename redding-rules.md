@@ -2,7 +2,7 @@
 
 This document walks through a prototype of `Redding Stan`; the source file (temporarily) lives [here](https://github.com/dmuck/redding-stan/blob/issue-5-main/src/main.cpp) on the `issue-5-main` branch.
 
-## [1. Include ](#first)
+## 1. Include
 
 ```c++
 #include <stan/model/model_header.hpp>
@@ -21,7 +21,7 @@ stan::model::model_base &new_model(stan::io::var_context &data_context,
 
 which we need to instantiate the Stan model with the data. The data are assembled into proper format using the `stan::io::var_context` [class](https://github.com/stan-dev/stan/blob/develop/src/stan/io/var_context.hpp). The last argument, `*msg_stream`, is a pointer that allows for the model's details to be printed to the console. 
 
-## [2. Inside Main](#second)
+## 2. Inside Main
 
 Now we're inside the program. First, we output a couple lines to the console, one of which displays the number of arguments our program takes. One of those arguments is the data file, which in this particular case was `bernoulli.data.R`, the one we called from the command line. The name of that file gets printed to the screen with 
 
@@ -40,9 +40,9 @@ stan::model::model_base &model = new_model(dump, 0L, &std::cout);
 std::cout << "Model has been instantiated" << std::endl;
 ```
 
-## [2.5. Stepping into  the `model_base` class](#twofive)
+## 2.5. Stepping into  the `model_base` class
 
-Before we get to what the model gives us back, let's look at some of the functionality that was briefly mentioned [above](#first) regarding the `model_base.hpp` header file. 
+Before we get to what the model gives us back, let's look at some of the functionality that was briefly mentioned above regarding the `model_base.hpp` header file. 
 
 *NB: where is `new_model()` function? 
 
@@ -59,7 +59,7 @@ The `model.model_name()` call is self-explanatory. The following line calls the 
 
 The `model_base` class also contains functions that return the log density for the unconstrained parameters, with and without Jacobian corrections for constraints and normalizing constants. These are what we'll call to smuggle out our gradients and log probability density for the parameters. 
 
-## [3. Getting Log-Prob and Gradients](#three)
+## 3. Getting Log-Prob and Gradients
 
 Finally, we've come to the point where we can collect and output our quantities of interest. We start with generating random starting values for each of our parameters and printing them to the console
 
@@ -74,7 +74,7 @@ The first line uses the `Eigen::Matrix` class, where the first template paramete
 
 The `Eigen::MatrixXd::Random()` creates a matrix of random values with dimensions equal to `(num_params_r, 1)`, which is just a column vector of random initialization points for each of the unconstrained parameters in our model. 
 
-Now, to get the log probability density and gradients, we first call the `log_prob_propto_jacobian()` [function](https://github.com/stan-dev/stan/blob/9f7361a87d575ae5977bd84fc8614b1e9eb60e81/src/stan/model/model_base.hpp#L510) from the `model_base` class and assign the return value to `lp`, which is of type `math::var`, as described [above](#twofive).
+Now, to get the log probability density and gradients, we first call the `log_prob_propto_jacobian()` [function](https://github.com/stan-dev/stan/blob/9f7361a87d575ae5977bd84fc8614b1e9eb60e81/src/stan/model/model_base.hpp#L510) from the `model_base` class and assign the return value to `lp`, which is of type `math::var`, as described above.
 
 ```c++
 stan::math::var lp = model.log_prob_propto_jacobian(parameters, &msg);
@@ -102,5 +102,5 @@ The full repository, which contains build instructions, can be accessed [here](h
 
 ---------
 
-*Last updated: Feb. 16, 2022 @ 2:16pm EST*
+*Last updated: Feb. 16, 2022 @ 2:29pm EST*
 

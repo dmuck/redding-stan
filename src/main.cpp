@@ -1,3 +1,5 @@
+// main.cpp
+
 #include <iostream>
 #include <fstream>
 #include <stan/model/model_header.hpp>
@@ -9,19 +11,20 @@ stan::model::model_base &new_model(stan::io::var_context &data_context,
                                    unsigned int seed, std::ostream *msg_stream);
 
 int main(int argc, char* argv[]) {
-  std::cout << "inside main" << std::endl << std::endl;
 
-  std::cout << "number of arguments: " << argc << std::endl;
-
+  std::cout << "------------------------------------------------------------" << std::endl;
+  std::cout << "\nWelcome to ReddingStan" << std::endl << std::endl;
+  std::cout << "Number of arguments provided: " << argc << std::endl;
+  std::cout << " * argv[0] is the executable: " << argv[0] << std::endl;
 
   std::fstream stream;
   if (argc > 1) {
-    std::cout << "data file = " << argv[1] << std::endl;
+    std::cout << " * argv[1] is the data file: " << argv[1] << std::endl;
     stream = std::fstream(argv[1], std::fstream::in);
   }
   stan::io::dump dump(stream);
 
-  // INSTANTIATED MODEL!!!
+  // Instantiate the model
   stan::model::model_base &model
       = new_model(dump, 0L, &std::cout);
 
@@ -41,8 +44,8 @@ int main(int argc, char* argv[]) {
   std::cout << " * num_params_i: " << num_params_i << std::endl;
 
   // logic from Math's stan/math/rev/functor/gradient.hpp
-
   Eigen::Matrix<stan::math::var, -1, 1> parameters = Eigen::MatrixXd::Random(num_params_r, 1);
+  
   std::cout << " * parameters = " << parameters << std::endl;
 
   std::stringstream msg;
@@ -51,11 +54,12 @@ int main(int argc, char* argv[]) {
   double lp_val = lp.val();
   stan::math::grad(lp.vi_);
   Eigen::VectorXd gradient = parameters.adj();
-  
+
   std::cout << "------------------------------------------------------------" << std::endl;
   std::cout << " * log prob propto jacobian of parameters: " << lp_val << std::endl;
-  std::cout << " * gradient! " << gradient << std::endl;
+  std::cout << " * gradient: " << gradient << std::endl;
   std::cout << " * message while evaluating log prob: \"" << msg.str() << "\"" << std::endl;
+  std::cout << "------------------------------------------------------------" << std::endl;  
 
   
   return 0;

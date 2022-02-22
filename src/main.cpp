@@ -1,7 +1,6 @@
-// main.cpp
-
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <stan/model/model_header.hpp>
 #include <stan/model/model_base.hpp>
 #include <stan/io/dump.hpp>
@@ -10,7 +9,72 @@
 stan::model::model_base &new_model(stan::io::var_context &data_context,
                                    unsigned int seed, std::ostream *msg_stream);
 
+std::string global_help() {
+  return "";
+}
+
+std::string global_error(int argc, char* argv[]) {
+  std::stringstream msg;
+  msg << "ReddingStan" << std::endl;
+
+  return msg.str();
+}
+
+std::string startup() {
+  std::stringstream msg;
+  msg << "ReddingStan version 0.1 alpha" << std::endl
+      << std::endl
+      << "ReddingStan is free software and comes with ABSOLUTELY NO WARRANTY." << std::endl
+      << std::endl
+      << "Type 'help' for some help, 'list' a list of commands." << std::endl
+      << std::endl;
+  return msg.str();
+}
+
+void echo_prompt() {
+  std::cout << "[redding]$ ";
+  return;
+}
+
+std::string read() {
+  std::string line;
+  std::getline(std::cin, line);
+  return line;
+}
+
+std::string eval(std::string& line) {
+  return "";
+}
+
+void print(std::string& message) {
+  std::cout << message << std::endl;
+  return;
+}
+
 int main(int argc, char* argv[]) {
+  if (argc >= 2) {
+    if (strcmp(argv[1], "--help") || strcmp(argv[1], "-h")) {
+      std::cout << global_help();
+      return 0;
+    } else {
+      std::cout << global_error(argc, argv);
+      return 1;
+    }
+  }
+  std::cout << startup();
+
+
+  while (true) {
+    echo_prompt();
+    std::string line = read();
+    std::string message = eval(line);
+    print(message);
+  }
+
+  return 0;
+  
+
+  
 
   std::cout << "------------------------------------------------------------" << std::endl;
   std::cout << "\nWelcome to ReddingStan" << std::endl << std::endl;

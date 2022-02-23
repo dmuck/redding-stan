@@ -1,3 +1,4 @@
+#include <deque>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -6,7 +7,7 @@
 #include <stan/model/model_base.hpp>
 #include <stan/io/dump.hpp>
 
-int history_size = 100;
+int history_size = 25;
 
 // forward declaration for function defined in another translation unit
 stan::model::model_base &new_model(stan::io::var_context &data_context,
@@ -35,7 +36,7 @@ std::string global_help(int argc, char* argv[]) {
   const int n = 15;
   msg << "Options:" << std::endl;
   add_option(msg, n, "-h, --help", "Print short help message and exit");
-  add_option(msg, n, "--histsize", "Set the history size. Default is 100");
+  add_option(msg, n, "--histsize", "Set the history size. Default is 25");
 
   msg << std::endl
       << "Report bugs at https://github.com/dmuck/redding-stan" << std::endl
@@ -111,7 +112,23 @@ std::string eval_list() {
   return message.str();
 }
 
-std::string eval(std::string& line) {
+std::string eval_history(const int count, const std::deque<std::string>& history) {
+  std::stringstream msg;
+
+  msg << std::endl;
+  for (int ii = 0; ii < history.size(); ++ii) {
+    msg.width(2);
+    msg << "";
+    msg.width(6);
+    msg << std::left << ii;
+    msg << history[ii] << std::endl;
+  }
+    
+  
+  return msg.str();
+}
+
+std::string eval(std::string& line, const int count, const std::deque<std::string>& history) {
   std::string command;
   std::istringstream ss(line);
   std::stringstream message;
@@ -119,6 +136,8 @@ std::string eval(std::string& line) {
   
   if (command == "list") {
     return eval_list();
+  } else if (command == "history") {
+    return eval_history(count, history);
   } else {
     message << command;
   }
@@ -147,13 +166,20 @@ int main(int argc, char* argv[]) {
     }
   }
   std::cout << startup();
-  
+
+
+  int count = 0;
+  std::deque<std::string> history(history_size);
 
   while (true) {
     echo_prompt();
     std::string line = read();
-    std::string message = eval(line);
+    std::string message = eval(line, count, history);
     print(message);
+
+    ++count;
+    history.pop_front();
+    history.push_back(line);
   }
 
   return 0;

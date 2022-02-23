@@ -6,6 +6,8 @@
 #include <stan/model/model_base.hpp>
 #include <stan/io/dump.hpp>
 
+int history_size = 100;
+
 // forward declaration for function defined in another translation unit
 stan::model::model_base &new_model(stan::io::var_context &data_context,
                                    unsigned int seed, std::ostream *msg_stream);
@@ -23,7 +25,6 @@ void add_option(std::stringstream& message, const int width,
 std::string global_help(int argc, char* argv[]) {
   std::stringstream msg;
   msg << std::endl
-      << std::endl
       << "Usage: " << argv[0] << " [options]" << std::endl
       << std::endl
       << "Start ReddingStan, a command-line program "
@@ -34,10 +35,27 @@ std::string global_help(int argc, char* argv[]) {
   const int n = 15;
   msg << "Options:" << std::endl;
   add_option(msg, n, "-h, --help", "Print short help message and exit");
+  add_option(msg, n, "--histsize", "Set the history size. Default is 100");
 
   msg << std::endl
-      << "Report bugs at https://github.com/dmuck/redding-stan" << std::endl;
+      << "Report bugs at https://github.com/dmuck/redding-stan" << std::endl
+      << std::endl;
   
+  return msg.str();
+}
+
+std::string global_history_size(int argc, char* argv[], int index, int& history_size) {
+  // FIXME: this is actually an error and should be treated as such
+  // TODO: also check that the next thing is a valid int
+  if (argc <= index + 1)
+    return "Please provide the history size\n";
+
+  std::stringstream msg;
+  msg << "* Setting history size from " << history_size << " to ";
+  
+  std::istringstream imsg(argv[index + 1]);
+  imsg >> history_size;
+  msg << history_size << std::endl;
   return msg.str();
 }
 
@@ -112,12 +130,24 @@ void print(std::string& message) {
 
 int main(int argc, char* argv[]) {
   if (argc >= 2) {
-    if (strcmp(argv[1], "--help") || strcmp(argv[1], "-h")) {
-      std::cout << global_help(argc, argv);
-      return 0;
-    } else {
-      std::cout << global_error(argc, argv);
-      return 1;
+    for (int ii = 1; ii < argc; ++ii) {
+      std::cout << "------------------------------------------------" << std::endl
+		<< "ii = " << ii << std::endl
+		<< "argc = " << argc << std::endl
+		<< "argv[ii] = " << argv[ii] << std::endl
+		<< "strcmp(argv[ii], \"--histsize\") = " << strcmp(argv[ii], "--histsize") << std::endl;
+    
+      if (strcmp(argv[ii], "--help") == 0
+	  || strcmp(argv[ii], "-h") == 0) {
+	std::cout << global_help(argc, argv);
+	return 0;
+      } else if (strcmp(argv[ii], "--histsize") == 0) {
+	std::cout << global_history_size(argc, argv, ii, history_size);
+	ii++;
+      } else {
+	std::cout << global_error(argc, argv);
+	return 1;
+      }
     }
   }
   std::cout << startup();

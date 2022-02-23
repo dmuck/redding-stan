@@ -61,7 +61,9 @@ std::string global_history_size(int argc, char* argv[], int index, int& history_
 
 std::string global_error(int argc, char* argv[]) {
   std::stringstream msg;
-  msg << "ReddingStan" << std::endl;
+  msg << "ReddingStan could not start" << std::endl
+      << "  Please check the arguments" << std::endl
+      << std::endl;
 
   return msg.str();
 }
@@ -131,12 +133,6 @@ void print(std::string& message) {
 int main(int argc, char* argv[]) {
   if (argc >= 2) {
     for (int ii = 1; ii < argc; ++ii) {
-      std::cout << "------------------------------------------------" << std::endl
-		<< "ii = " << ii << std::endl
-		<< "argc = " << argc << std::endl
-		<< "argv[ii] = " << argv[ii] << std::endl
-		<< "strcmp(argv[ii], \"--histsize\") = " << strcmp(argv[ii], "--histsize") << std::endl;
-    
       if (strcmp(argv[ii], "--help") == 0
 	  || strcmp(argv[ii], "-h") == 0) {
 	std::cout << global_help(argc, argv);

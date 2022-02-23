@@ -1,5 +1,6 @@
-#include <iostream>
 #include <fstream>
+#include <iomanip>
+#include <iostream>
 #include <sstream>
 #include <stan/model/model_header.hpp>
 #include <stan/model/model_base.hpp>
@@ -42,8 +43,51 @@ std::string read() {
   return line;
 }
 
+void add_command(std::stringstream& message, const int width,
+		 const std::string command, const std::string description) {
+  message.width(2);
+  message << "";
+  message.width(width);
+  message << std::left << command
+	  << description << std::endl;
+}
+
+std::string eval_list() {
+  std::stringstream message;
+  constexpr int n = 15;
+  message << std::endl
+	  << "List of all commands:" << std::endl;
+  add_command(message, n, "list", "list all commands");
+  add_command(message, n, "help", "prints basic usage");
+  add_command(message, n, "status", "status of the current run");
+  add_command(message, n, "N", "number of parameters in the model");
+  add_command(message, n, "load", "loads data");
+  add_command(message, n, "unload", "unloads data");
+  add_command(message, n, "eval", "evaluate model at an unconstrained parameter value");
+  add_command(message, n, "constrain", "prints constrained values from parameter values");
+  add_command(message, n, "unconstrain", "prints parameter values from a constrained value");
+  add_command(message, n, "history", "prints history");
+  add_command(message, n, "clear", "clear history");
+  add_command(message, n, "quit", "quit");
+  return message.str();
+  
+}
+
+
 std::string eval(std::string& line) {
-  return "";
+  std::string command;
+  std::istringstream ss(line);
+  std::stringstream message;
+  ss >> command;
+  
+  if (command == "list") {
+    return eval_list();
+  } else {
+    message << command;
+  }
+  
+  
+  return message.str();
 }
 
 void print(std::string& message) {
@@ -62,7 +106,7 @@ int main(int argc, char* argv[]) {
     }
   }
   std::cout << startup();
-
+  
 
   while (true) {
     echo_prompt();
@@ -72,9 +116,7 @@ int main(int argc, char* argv[]) {
   }
 
   return 0;
-  
-
-  
+    
 
   std::cout << "------------------------------------------------------------" << std::endl;
   std::cout << "\nWelcome to ReddingStan" << std::endl << std::endl;

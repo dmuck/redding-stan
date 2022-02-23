@@ -5,17 +5,115 @@
 #include <stan/model/model_header.hpp>
 #include <stan/model/model_base.hpp>
 #include <stan/io/dump.hpp>
-#include <redding/helper.hpp>
 
 // forward declaration for function defined in another translation unit
 stan::model::model_base &new_model(stan::io::var_context &data_context,
                                    unsigned int seed, std::ostream *msg_stream);
 
 
+void add_option(std::stringstream& message, const int width,
+		 const std::string command, const std::string description) {
+  message.width(2);
+  message << "";
+  message.width(width);
+  message << std::left << command
+	  << description << std::endl;
+}
+
+std::string global_help(int argc, char* argv[]) {
+  std::stringstream msg;
+  msg << std::endl
+      << std::endl
+      << "Usage: " << argv[0] << " [options]" << std::endl
+      << std::endl
+      << "Start ReddingStan, a command-line program "
+      << "that smuggles log probabilities and " << std::endl
+      << "gradients out of a Stan model." << std::endl
+      << std::endl;
+
+  const int n = 15;
+  msg << "Options:" << std::endl;
+  add_option(msg, n, "-h, --help", "Print short help message and exit");
+
+  msg << std::endl
+      << "Report bugs at https://github.com/dmuck/redding-stan" << std::endl;
+  
+  return msg.str();
+}
+
+std::string global_error(int argc, char* argv[]) {
+  std::stringstream msg;
+  msg << "ReddingStan" << std::endl;
+
+  return msg.str();
+}
+
+std::string startup() {
+  std::stringstream msg;
+  msg << "ReddingStan version 0.1 alpha" << std::endl
+      << std::endl
+      << "ReddingStan is free software and comes with ABSOLUTELY NO WARRANTY." << std::endl
+      << std::endl
+      << "Type 'help' for some help, 'list' a list of commands." << std::endl
+      << std::endl;
+  return msg.str();
+}
+
+void echo_prompt() {
+  std::cout << "[redding]$ ";
+  return;
+}
+
+std::string read() {
+  std::string line;
+  std::getline(std::cin, line);
+  return line;
+}
+
+
+std::string eval_list() {
+  std::stringstream message;
+  constexpr int n = 15;
+  message << std::endl
+	  << "List of all commands:" << std::endl;
+  add_option(message, n, "list", "list all commands");
+  add_option(message, n, "help", "prints basic usage");
+  add_option(message, n, "status", "status of the current run");
+  add_option(message, n, "N", "number of parameters in the model");
+  add_option(message, n, "load", "loads data");
+  add_option(message, n, "unload", "unloads data");
+  add_option(message, n, "eval", "evaluate model at an unconstrained parameter value");
+  add_option(message, n, "constrain", "prints constrained values from parameter values");
+  add_option(message, n, "unconstrain", "prints parameter values from a constrained value");
+  add_option(message, n, "history", "prints history");
+  add_option(message, n, "clear", "clear history");
+  add_option(message, n, "quit", "quit");
+  return message.str();
+}
+
+std::string eval(std::string& line) {
+  std::string command;
+  std::istringstream ss(line);
+  std::stringstream message;
+  ss >> command;
+  
+  if (command == "list") {
+    return eval_list();
+  } else {
+    message << command;
+  }
+  return message.str();
+}
+
+void print(std::string& message) {
+  std::cout << message << std::endl;
+  return;
+}
+
 int main(int argc, char* argv[]) {
   if (argc >= 2) {
     if (strcmp(argv[1], "--help") || strcmp(argv[1], "-h")) {
-      std::cout << global_help();
+      std::cout << global_help(argc, argv);
       return 0;
     } else {
       std::cout << global_error(argc, argv);

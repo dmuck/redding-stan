@@ -146,7 +146,7 @@ std::string eval_history(const int count, const std::deque<std::string>& history
 }
 
 std::string eval_status(const stan::model::model_base* model, const int count,
-			const time_point_t& start_time) {
+			const time_point_t& start_time, const std::string& data_filename) {
   std::stringstream msg;
   time_point_t now = std::chrono::system_clock::now();
   std::time_t time = std::chrono::system_clock::to_time_t(start_time);
@@ -157,12 +157,12 @@ std::string eval_status(const stan::model::model_base* model, const int count,
       << "   elapsed time: " << seconds / 60 << " minutes " << seconds % 60 << " seconds"<< std::endl
       << "   number of commands called: " << count << std::endl
       << std::endl;
-
   if (model == nullptr) {
     msg << "The model has not been initialized." << std::endl;
   } else {
-    msg << "The model was initialized with data file: " << "..." << std::endl
-	<< "  * number of unconstrained parameters: " << "..." << std::endl;
+    msg << "The model is initialized" << std::endl
+	<< "  * data file: \"" << data_filename << "\"" <<  std::endl
+	<< "  * number of unconstrained parameters: " << model->num_params_r() << std::endl;
   }
   
   return msg.str();
@@ -172,12 +172,40 @@ std::string eval_N(std::string& line) {
   return "... N";
 }
 
-std::string eval_load(std::string& load) {
-  return "... load";
+std::string eval_load(std::istringstream& ss, stan::model::model_base** model,
+		      std::string& data_filename, const unsigned int seed) {
+  std::string filename;
+  ss >> filename;
+
+  if (filename == "") {
+    return "Please provide a filename\n";
+  }
+
+  if (*model != nullptr) {
+    delete *model;
+    *model = nullptr;
+  }
+
+  data_filename = filename;
+  std::stringstream msg;
+  try {
+    std::fstream stream(data_filename, std::fstream::in);
+    
+    stan::io::dump var_context(stream);
+    *model = &new_model(var_context, seed, &std::cout);
+    msg << "* model initialized with data from \"" << data_filename << "\""
+	<< std::endl;
+  } catch (const std::exception& e) {
+    msg << "* model could not be initialized. See error message:" << std::endl
+	<< e.what() << std::endl;
+  }
+  return msg.str();
 }
 
 std::string eval(std::string& line, const int count, const std::deque<std::string>& history,
-		 const stan::model::model_base* model, const time_point_t& start_time) {
+		 std::string& data_filename,
+		 stan::model::model_base** model, const time_point_t& start_time,
+		 const unsigned int seed) {
   std::string command;
   std::istringstream ss(line);
   std::stringstream message;
@@ -188,11 +216,11 @@ std::string eval(std::string& line, const int count, const std::deque<std::strin
   } else if (command == "history") {
     return eval_history(count, history);
   } else if (command == "status") {
-    return eval_status(model, count, start_time);
+    return eval_status(*model, count, start_time, data_filename);
   } else if (command == "N") {
     return eval_N(line);
   } else if (command == "load") {
-    return eval_load(line);
+    return eval_load(ss, model, data_filename, seed);
   } else {
     message << command;
   }
@@ -208,6 +236,7 @@ int main(int argc, char* argv[]) {
   const time_point_t start_time = std::chrono::system_clock::now();
   int history_size = 25;
   unsigned int seed = 0;
+  std::string data_filename;
   stan::model::model_base *model = nullptr;
     
   if (argc >= 2) {
@@ -237,13 +266,17 @@ int main(int argc, char* argv[]) {
     model = &new_model(empty, seed, &std::cout);
     std::cout << "* model initialized with no data. Ready." << std::endl << std::endl;
   } catch (const std::exception& e) {
+    //no op
   }
 
   while (true) {
     echo_prompt();
     std::string line = read();
-    std::string message = eval(line, count, history, model,
-			       start_time);
+    std::string message = eval(line, count, history,
+			       data_filename,
+			       &model,
+			       start_time,
+			       seed);
     print(message);
 
     ++count;

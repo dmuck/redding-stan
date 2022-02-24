@@ -249,7 +249,7 @@ std::string eval_eval(std::istringstream& ss, stan::model::model_base* model) {
 
     msg << lp.val() << std::endl
 	<< gradient << std::endl
-	<< std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl
+	<< std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " µs" << std::endl
 	<< "\"" << log_prob_message.str() << "\"";
   } catch (std::exception& e) {
     msg << "Error: evaluating at the parameter throws exception" << std::endl

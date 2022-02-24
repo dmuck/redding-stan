@@ -271,16 +271,28 @@ std::string eval(std::string& line, const int count, const std::deque<std::strin
   
   if (command == "list") {
     return eval_list();
-  } else if (command == "history") {
-    return eval_history(count, history);
+  } else if (command == "help") {
+    return "FIXME help";
   } else if (command == "status") {
     return eval_status(*model, count, start_time, data_filename);
   } else if (command == "N") {
     return eval_N(*model);
   } else if (command == "load") {
     return eval_load(ss, model, data_filename, seed);
+  } else if (command == "unload") {
+    return "FIXME unload";
   } else if (command == "eval") {
     return eval_eval(ss, *model);
+  } else if (command == "constrain") {
+    return "FIXME constrain";
+  } else if (command == "unconstrain") {
+    return "FIXME unconstrain";
+  } else if (command == "history") {
+    return eval_history(count, history);
+  } else if (command == "clear") {
+    return "FIXME clear";
+  } else if (command == "quit") {
+    exit(0);
   }
   
   message << "Error: unknown command \"" << command << "\"";

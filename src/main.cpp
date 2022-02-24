@@ -1,3 +1,4 @@
+#include <chrono>
 #include <deque>
 #include <fstream>
 #include <iomanip>
@@ -6,13 +7,15 @@
 #include <stan/model/model_header.hpp>
 #include <stan/model/model_base.hpp>
 #include <stan/io/dump.hpp>
+#include <stan/io/empty_var_context.hpp>
 
-int history_size = 25;
 
 // forward declaration for function defined in another translation unit
 stan::model::model_base &new_model(stan::io::var_context &data_context,
                                    unsigned int seed, std::ostream *msg_stream);
 
+
+using time_point_t = std::chrono::time_point<std::chrono::system_clock>;
 
 void add_option(std::stringstream& message, const int width,
 		 const std::string command, const std::string description) {
@@ -57,6 +60,21 @@ std::string global_history_size(int argc, char* argv[], int index, int& history_
   std::istringstream imsg(argv[index + 1]);
   imsg >> history_size;
   msg << history_size << std::endl;
+  return msg.str();
+}
+
+std::string global_seed(int argc, char* argv[], int index, unsigned int& seed) {
+  // FIXME: this is actually an error and should be treated as such
+  // TODO: also check that the next thing is a valid int
+  if (argc <= index + 1)
+    return "Please provide the random seed\n";
+
+  std::stringstream msg;
+  msg << "* Setting random seed from " << seed << " to ";
+  
+  std::istringstream imsg(argv[index + 1]);
+  imsg >> seed;
+  msg << seed << std::endl;
   return msg.str();
 }
 
@@ -123,12 +141,43 @@ std::string eval_history(const int count, const std::deque<std::string>& history
     msg << std::left << ii;
     msg << history[ii] << std::endl;
   }
-    
+
+  return msg.str();
+}
+
+std::string eval_status(const stan::model::model_base* model, const int count,
+			const time_point_t& start_time) {
+  std::stringstream msg;
+  time_point_t now = std::chrono::system_clock::now();
+  std::time_t time = std::chrono::system_clock::to_time_t(start_time);
+  int seconds = std::chrono::duration_cast<std::chrono::seconds>(now - start_time).count();
+
+  msg << std::endl;
+  msg << "ReddingStan started at " << std::ctime(&time) << std::endl
+      << "   elapsed time: " << seconds / 60 << " minutes " << seconds % 60 << " seconds"<< std::endl
+      << "   number of commands called: " << count << std::endl
+      << std::endl;
+
+  if (model == nullptr) {
+    msg << "The model has not been initialized." << std::endl;
+  } else {
+    msg << "The model was initialized with data file: " << "..." << std::endl
+	<< "  * number of unconstrained parameters: " << "..." << std::endl;
+  }
   
   return msg.str();
 }
 
-std::string eval(std::string& line, const int count, const std::deque<std::string>& history) {
+std::string eval_N(std::string& line) {
+  return "... N";
+}
+
+std::string eval_load(std::string& load) {
+  return "... load";
+}
+
+std::string eval(std::string& line, const int count, const std::deque<std::string>& history,
+		 const stan::model::model_base* model, const time_point_t& start_time) {
   std::string command;
   std::istringstream ss(line);
   std::stringstream message;
@@ -138,6 +187,12 @@ std::string eval(std::string& line, const int count, const std::deque<std::strin
     return eval_list();
   } else if (command == "history") {
     return eval_history(count, history);
+  } else if (command == "status") {
+    return eval_status(model, count, start_time);
+  } else if (command == "N") {
+    return eval_N(line);
+  } else if (command == "load") {
+    return eval_load(line);
   } else {
     message << command;
   }
@@ -150,6 +205,11 @@ void print(std::string& message) {
 }
 
 int main(int argc, char* argv[]) {
+  const time_point_t start_time = std::chrono::system_clock::now();
+  int history_size = 25;
+  unsigned int seed = 0;
+  stan::model::model_base *model = nullptr;
+    
   if (argc >= 2) {
     for (int ii = 1; ii < argc; ++ii) {
       if (strcmp(argv[ii], "--help") == 0
@@ -159,6 +219,9 @@ int main(int argc, char* argv[]) {
       } else if (strcmp(argv[ii], "--histsize") == 0) {
 	std::cout << global_history_size(argc, argv, ii, history_size);
 	ii++;
+      } else if (strcmp(argv[ii], "--seed") == 0) {
+	std::cout << global_seed(argc, argv, ii, seed);
+	ii++;
       } else {
 	std::cout << global_error(argc, argv);
 	return 1;
@@ -167,24 +230,28 @@ int main(int argc, char* argv[]) {
   }
   std::cout << startup();
 
-
   int count = 0;
   std::deque<std::string> history(history_size);
+  try {
+    stan::io::empty_var_context empty;
+    model = &new_model(empty, seed, &std::cout);
+    std::cout << "* model initialized with no data. Ready." << std::endl << std::endl;
+  } catch (const std::exception& e) {
+  }
 
   while (true) {
     echo_prompt();
     std::string line = read();
-    std::string message = eval(line, count, history);
+    std::string message = eval(line, count, history, model,
+			       start_time);
     print(message);
 
     ++count;
     history.pop_front();
     history.push_back(line);
   }
-
   return 0;
-    
-
+  /*
   std::cout << "------------------------------------------------------------" << std::endl;
   std::cout << "\nWelcome to ReddingStan" << std::endl << std::endl;
   std::cout << "Number of arguments provided: " << argc << std::endl;
@@ -236,4 +303,5 @@ int main(int argc, char* argv[]) {
 
   
   return 0;
+  */
 }

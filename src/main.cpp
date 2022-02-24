@@ -154,22 +154,25 @@ std::string eval_status(const stan::model::model_base* model, const int count,
 
   msg << std::endl;
   msg << "ReddingStan started at " << std::ctime(&time) << std::endl
-      << "   elapsed time: " << seconds / 60 << " minutes " << seconds % 60 << " seconds"<< std::endl
+      << "   elapsed time:              "
+      << seconds / 60 << " minutes " << seconds % 60 << " seconds"<< std::endl
       << "   number of commands called: " << count << std::endl
       << std::endl;
   if (model == nullptr) {
-    msg << "The model has not been initialized." << std::endl;
+    msg << "The model is uninitialized. Please use the 'load' command." << std::endl;
   } else {
     msg << "The model is initialized" << std::endl
-	<< "  * data file: \"" << data_filename << "\"" <<  std::endl
+	<< "  * data file:                          \"" << data_filename << "\"" << std::endl
 	<< "  * number of unconstrained parameters: " << model->num_params_r() << std::endl;
   }
-  
   return msg.str();
 }
 
-std::string eval_N(std::string& line) {
-  return "... N";
+std::string eval_N(const stan::model::model_base* model) {
+  if (model == nullptr) {
+    return "Error: The model is uninitialized. Please use the 'load' command.\n";
+  }
+  return std::to_string(model->num_params_r());
 }
 
 std::string eval_load(std::istringstream& ss, stan::model::model_base** model,
@@ -196,7 +199,8 @@ std::string eval_load(std::istringstream& ss, stan::model::model_base** model,
     msg << "* model initialized with data from \"" << data_filename << "\""
 	<< std::endl;
   } catch (const std::exception& e) {
-    msg << "* model could not be initialized. See error message:" << std::endl
+    msg << "Error: model could not be initialized. See error message from Stan: "
+	<< std::endl << std::endl
 	<< e.what() << std::endl;
   }
   return msg.str();
@@ -218,7 +222,7 @@ std::string eval(std::string& line, const int count, const std::deque<std::strin
   } else if (command == "status") {
     return eval_status(*model, count, start_time, data_filename);
   } else if (command == "N") {
-    return eval_N(line);
+    return eval_N(*model);
   } else if (command == "load") {
     return eval_load(ss, model, data_filename, seed);
   } else {

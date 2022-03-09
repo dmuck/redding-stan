@@ -28,12 +28,10 @@ void add_option(std::stringstream& message, const int width,
 
 std::string global_help(int argc, char* argv[]) {
   std::stringstream msg;
-  msg << std::endl
-      << "Usage: " << argv[0] << " [options]" << std::endl
-      << std::endl
+  msg << "\nUsage: " << argv[0] << " [options]\n\n"
       << "Start ReddingStan, a command-line program "
-      << "that smuggles log probabilities and " << std::endl
-      << "gradients out of a Stan model." << std::endl
+      << "that smuggles log probabilities and \n"
+      << "gradients out of a Stan model.\n"
       << std::endl;
 
   const int n = 15;
@@ -42,7 +40,7 @@ std::string global_help(int argc, char* argv[]) {
   add_option(msg, n, "--histsize", "Set the history size. Default is 25");
 
   msg << std::endl
-      << "Report bugs at https://github.com/dmuck/redding-stan" << std::endl
+      << "\nReport bugs at https://github.com/dmuck/redding-stan \n"
       << std::endl;
   
   return msg.str();
@@ -80,8 +78,8 @@ std::string global_seed(int argc, char* argv[], int index, unsigned int& seed) {
 
 std::string global_error(int argc, char* argv[]) {
   std::stringstream msg;
-  msg << "ReddingStan could not start" << std::endl
-      << "  Please check the arguments" << std::endl
+  msg << "ReddingStan could not start\n"
+      << "\tPlease check the arguments\n"
       << std::endl;
 
   return msg.str();
@@ -89,11 +87,9 @@ std::string global_error(int argc, char* argv[]) {
 
 std::string startup() {
   std::stringstream msg;
-  msg << "ReddingStan version 0.1 alpha" << std::endl
-      << std::endl
-      << "ReddingStan is free software and comes with ABSOLUTELY NO WARRANTY." << std::endl
-      << std::endl
-      << "Type 'help' for some help, 'list' a list of commands." << std::endl
+  msg << "ReddingStan version 0.1 alpha\n\n"
+      << "ReddingStan is free software and comes with ABSOLUTELY NO WARRANTY.\n\n"
+      << "Type 'help' for some help, 'list' a list of commands.\n\n"
       << std::endl;
   return msg.str();
 }
@@ -104,9 +100,24 @@ void echo_prompt() {
 }
 
 std::string read() {
-  std::string line;
-  std::getline(std::cin, line);
-  return line;
+  std::string output;
+  std::string input; 
+	
+  while (true) 
+  {
+	echo_prompt();
+	std::getline(std::cin, input);
+	std::istringstream iss(input);
+	if (!std::cin)
+	{
+		std::cin.clear();
+		std::clearerr(stdin);
+  
+	} else if (iss >> output && iss.eof())
+		return output;
+	
+	std::cout << "Invalid input. Try again.\n";
+  }
 }
 
 
@@ -342,7 +353,6 @@ int main(int argc, char* argv[]) {
   }
 
   while (true) {
-    echo_prompt();
     std::string line = read();
     std::string message = eval(line, count, history,
 			       data_filename,

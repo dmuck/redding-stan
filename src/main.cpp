@@ -102,6 +102,7 @@ void echo_prompt() {
 std::string read() {
   std::string output;
   std::string input; 
+  std::stringstream msg;
 	
   while (true) 
   {
@@ -113,10 +114,13 @@ std::string read() {
 		std::cin.clear();
 		std::clearerr(stdin);
   
-	} else if (iss >> output && iss.eof())
-		return output;
-	
-	std::cout << "Invalid input. Try again.\n";
+	} 
+	else if (iss >> output && iss.eof())
+	{
+		msg << output << std::endl;
+		return msg.str();
+	}
+	else { std::cout << "Invalid input. Try again.\n"; }
   }
 }
 

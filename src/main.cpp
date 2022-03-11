@@ -127,7 +127,10 @@ std::string eval_list() {
   add_option(message, n, "N", "number of parameters in the model");
   add_option(message, n, "load", "loads data");
   add_option(message, n, "unload", "unloads data");
-  add_option(message, n, "eval", "evaluate model at an unconstrained parameter value");
+  add_option(message, n, "eval", "evaluate model at an unconstrained parameter value; equiv to `eval_J_true`"); 
+  add_option(message, n, "eval_J_true", "evaluate model at an unconstrained parameter value with Jacobian adjustment");
+  add_option(message, n, "eval_J_false", "evaluate model at an unconstrained parameter value without Jaciobian adjustment");
+  add_option(message, n, "eval_J_only", "evaluate Jacobian only");
   add_option(message, n, "constrain", "prints constrained values from parameter values");
   add_option(message, n, "unconstrain", "prints parameter values from a constrained value");
   add_option(message, n, "history", "prints history");
@@ -211,21 +214,18 @@ std::string eval_load(std::istringstream& ss, stan::model::model_base** model,
   return msg.str();
 }
 
-std::string eval_eval(std::istringstream& ss, stan::model::model_base* model) {
-  if (model == nullptr) {
-    return "Error: the model is uninitialized. Please use the 'load' command.\n";
-  }
-
+// precondition: model is not nullptr
+Eigen::Matrix<stan::math::var, -1, 1> parse_parameters(std::istringstream& ss,
+						       stan::model::model_base* model) {
   const int N = model->num_params_r();
-  size_t idx = std::string("eval").length() + 1;
+  Eigen::Matrix<stan::math::var, -1, 1> theta(N);  
   std::stringstream msg;
 
-  Eigen::Matrix<stan::math::var, -1, 1> theta(N);
   for (int n = 0; n < N; ++n) {
     if (!ss.good()) {
       stan::math::recover_memory();
       msg << "Error: only " << n + 1 << " parameter values provided. Needs " << N << ".";
-      return msg.str();
+      throw std::invalid_argument(msg.str());
     }
 
     std::string substr;
@@ -236,16 +236,64 @@ std::string eval_eval(std::istringstream& ss, stan::model::model_base* model) {
       stan::math::recover_memory();
       msg << "Error: issue parsing parameter value from string." << std::endl
 	  << "\"" << e.what() << "\"";
-      return msg.str();
+      throw std::invalid_argument(msg.str());      
     }
   }
   if (ss.good()) {
     stan::math::recover_memory();
     msg << "Error: too many parameters provided. Expecting only " << N << " values.";
-    return msg.str();
+    throw std::invalid_argument(msg.str());    
+  }
+  return theta;
+}
+
+
+// precondition: model is not nullptr
+Eigen::Matrix<double, -1, 1> parse_parameters_double(std::istringstream& ss,
+						     stan::model::model_base* model) {
+  const int N = model->num_params_r();
+  Eigen::Matrix<double, -1, 1> theta(N);  
+  std::stringstream msg;
+
+  for (int n = 0; n < N; ++n) {
+    if (!ss.good()) {
+      msg << "Error: only " << n + 1 << " parameter values provided. Needs " << N << ".";
+      throw std::invalid_argument(msg.str());
+    }
+
+    std::string substr;
+    std::getline(ss, substr, ',');
+    try {
+      theta[n] = std::stod(substr);
+    } catch (std::exception& e) {
+      msg << "Error: issue parsing parameter value from string." << std::endl
+	  << "\"" << e.what() << "\"";
+      throw std::invalid_argument(msg.str());      
+    }
+  }
+  if (ss.good()) {
+    stan::math::recover_memory();
+    msg << "Error: too many parameters provided. Expecting only " << N << " values.";
+    throw std::invalid_argument(msg.str());    
+  }
+  return theta;
+}
+
+
+std::string eval_eval_J_true(std::istringstream& ss, stan::model::model_base* model) {
+  if (model == nullptr) {
+    return "Error: the model is uninitialized. Please use the 'load' command.\n";
+  }
+
+  Eigen::Matrix<stan::math::var, -1, 1> theta;
+  try {
+    theta = parse_parameters(ss, model);
+  } catch (const std::invalid_argument& e) {
+    return e.what();
   }
 
   std::stringstream log_prob_message;
+  std::stringstream msg;  
   try {
     std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
     stan::math::var lp = model->log_prob_propto_jacobian(theta, &log_prob_message);
@@ -265,6 +313,78 @@ std::string eval_eval(std::istringstream& ss, stan::model::model_base* model) {
   stan::math::recover_memory();
   return msg.str();
 }
+
+std::string eval_eval(std::istringstream& ss, stan::model::model_base* model) {
+  return eval_eval_J_true(ss, model);
+}
+
+std::string eval_eval_J_false(std::istringstream& ss, stan::model::model_base* model) {
+  if (model == nullptr) {
+    return "Error: the model is uninitialized. Please use the 'load' command.\n";
+  }
+
+  Eigen::Matrix<stan::math::var, -1, 1> theta;
+  try {
+    theta = parse_parameters(ss, model);
+  } catch (const std::invalid_argument& e) {
+    return e.what();
+  }
+
+  std::stringstream log_prob_message;
+  std::stringstream msg;
+  try {
+    std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+    stan::math::var lp = model->log_prob_propto(theta, &log_prob_message);
+    stan::math::grad(lp.vi_);
+    Eigen::VectorXd gradient = theta.adj();
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+
+    msg << lp.val() << std::endl
+	<< gradient << std::endl
+	<< std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " µs" << std::endl
+	<< "\"" << log_prob_message.str() << "\"";
+  } catch (std::exception& e) {
+    msg << "Error: evaluating at the parameter throws exception" << std::endl
+	<< log_prob_message.str() << std::endl
+	<< e.what();
+  }
+  stan::math::recover_memory();
+  return msg.str();
+}
+
+std::string eval_eval_J_only(std::istringstream& ss, stan::model::model_base* model) {
+  if (model == nullptr) {
+    return "Error: the model is uninitialized. Please use the 'load' command.\n";
+  }
+
+  Eigen::Matrix<double, -1, 1> theta;
+  try {
+    theta = parse_parameters_double(ss, model);
+  } catch (const std::invalid_argument& e) {
+    return e.what();
+  }
+
+  std::stringstream log_prob_message;
+  std::stringstream msg;
+  try {
+    std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+    double lp_jacobian_true = model->log_prob_propto_jacobian(theta, &log_prob_message);
+    log_prob_message.clear();
+    double lp_jacobian_false = model->log_prob_propto(theta, &log_prob_message);
+    double jacobian = lp_jacobian_true - lp_jacobian_false;
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+
+    msg << jacobian << std::endl
+	<< std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " µs" << std::endl
+	<< "\"" << log_prob_message.str() << "\"";
+  } catch (std::exception& e) {
+    msg << "Error: evaluating at the parameter throws exception" << std::endl
+	<< log_prob_message.str() << std::endl
+	<< e.what();
+  }
+  return msg.str();
+}
+
 
 std::string eval(std::string& line, const int count, const std::deque<std::string>& history,
 		 std::string& data_filename,
@@ -289,6 +409,12 @@ std::string eval(std::string& line, const int count, const std::deque<std::strin
     return "FIXME unload";
   } else if (command == "eval") {
     return eval_eval(ss, *model);
+  } else if (command == "eval_J_true") {
+    return eval_eval_J_true(ss, *model);
+  } else if (command == "eval_J_false") {
+    return eval_eval_J_false(ss, *model);
+  } else if (command == "eval_J_only") {
+    return eval_eval_J_only(ss, *model);
   } else if (command == "constrain") {
     return "FIXME constrain";
   } else if (command == "unconstrain") {

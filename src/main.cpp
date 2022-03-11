@@ -79,7 +79,7 @@ std::string global_seed(int argc, char* argv[], int index, unsigned int& seed) {
 std::string global_error(int argc, char* argv[]) {
   std::stringstream msg;
   msg << "ReddingStan could not start\n"
-      << "\tPlease check the arguments\n"
+      << "    Please check the arguments\n"
       << std::endl;
 
   return msg.str();
@@ -87,7 +87,7 @@ std::string global_error(int argc, char* argv[]) {
 
 std::string startup() {
   std::stringstream msg;
-  msg << "ReddingStan version 0.1 alpha\n\n"
+  msg << "\nReddingStan version 0.1 alpha\n\n"
       << "ReddingStan is free software and comes with ABSOLUTELY NO WARRANTY.\n\n"
       << "Type 'help' for some help, 'list' a list of commands.\n\n"
       << std::endl;

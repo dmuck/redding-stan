@@ -107,16 +107,17 @@ std::string read() {
   while (true) {
     echo_prompt();
     std::getline(std::cin, input);
+    std::cout << "[DEBUG] input at the start = " << input << std::endl;
     std::istringstream iss(input);
     if (!std::cin) {
       std::cin.clear();
       std::clearerr(stdin);
-    } 
-    else if (iss >> output && iss.eof()) {
+    } else if (iss >> output && iss.eof()) {
+      std::cout << "[DEBUG] output = " << output << std::endl;
       msg << output << std::endl;
       return msg.str();
-    }
-    else {
+    } else {
+      std::cout << "[DEBUG] INPUT = " << input << std::endl;
       std::cout << "Invalid input. Try again.\n";
     }
   }

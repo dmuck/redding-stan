@@ -95,35 +95,26 @@ std::string startup() {
 }
 
 void echo_prompt() {
-  std::cout << "[redding]$ ";
+  std::cout << "[redding]$ " << std::flush;
   return;
 }
 
 std::string read() {
-  std::string output;
   std::string input; 
-  std::stringstream msg;
 	
   while (true) {
     echo_prompt();
     std::getline(std::cin, input);
-    std::cout << "[DEBUG] input at the start = " << input << std::endl;
-    std::istringstream iss(input);
     if (!std::cin) {
       std::cin.clear();
       std::clearerr(stdin);
-    } else if (iss >> output) {
+    } else if (input.length() > 0) {
       return input;
-      /*std::cout << "[DEBUG] output = " << output << std::endl;
-      msg << output << std::endl;
-      return msg.str();*/
     } else {
-      std::cout << "[DEBUG] INPUT = " << input << std::endl;
       std::cout << "Invalid input. Try again.\n";
     }
   }
 }
-
 
 std::string eval_list() {
   std::stringstream message;

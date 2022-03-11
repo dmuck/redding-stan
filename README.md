@@ -17,7 +17,14 @@ ReddingStan offers a solution by providing direct access to these quantities fro
 
 # Running ReddingStan
 
-As a simple example: 
-1. Copy the `bernoulli.stan` and `bernoulli.data.R` files from the CmdStan example folder into the current working directory. Also en
-2. Run `make bernoulli && ./bernoulli bernoulli.data.R`
-3. The program should execute and print out the quantities to the console
+### From the command line
+
+To demonstrate the basic functionality, use the example in the [CmdStan](https://github.com/stan-dev/cmdstan/tree/develop/examples/bernoulli) repository:
+1. Ensure that the `bernoulli.stan` and `bernoulli.data.R` files are in the current working directory.
+2. Run `make bernoulli` to build the executable.
+3. After compiliation, run the executable in the terminal `./bernoulli`.
+4. If successful, the user will see the startup message and the prompt, `[redding]$ `; if unsuccessful, the user will see an error message indicating that the program could not start.
+5. Inside the program, one can enter `list` to see a list of commands printed to the console: `[redding]$ list`.
+6. To obtain the quantities of interest, initialize the model by loading in the data: `[redding]$ load bernoulli.data.R`. The program will return a message indicating success or failure. 
+7. Once the model has been initialized, the user can obtain the log probability density and gradient at a given parameter value: `[redding]$ eval 0.2`. The output will print the (1) log probability, (2) the gradient, and (3) the execution time, respectively, line by line. 
+8. To exit the program, simply enter quit: `[redding]$ quit`.

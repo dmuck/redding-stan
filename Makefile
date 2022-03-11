@@ -6,7 +6,7 @@ PHONY: help all install uninstall clean check
 STAN_VERSION = v2.29.0-rc2
 STANCFLAGS ?= --warn-pedantic
 
-CXXFLAGS = -I stan/src -I stan/lib/stan_math
+CXXFLAGS = -I src -I stan/src -I stan/lib/stan_math
 CXXFLAGS += -I stan/lib/stan_math/lib/eigen_3.3.9 -I stan/lib/stan_math/lib/boost_1.75.0
 CXXFLAGS += -I stan/lib/stan_math/lib/sundials_6.0.0/include -I stan/lib/stan_math/lib/tbb_2020.3/include
 CXXFLAGS += -std=c++14

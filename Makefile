@@ -1,18 +1,18 @@
 help: ## First target is the default make target
 
 
-PHONY: help all install uninstall clean check
+PHONY: help install uninstall clean check
 
 STAN_VERSION = v2.29.0-rc2
 STANCFLAGS ?= --warn-pedantic
 
-CXXFLAGS = -I src -I stan/src -I stan/lib/stan_math
-CXXFLAGS += -I stan/lib/stan_math/lib/eigen_3.3.9 -I stan/lib/stan_math/lib/boost_1.75.0
-CXXFLAGS += -I stan/lib/stan_math/lib/sundials_6.0.0/include -I stan/lib/stan_math/lib/tbb_2020.3/include
+CXXFLAGS = -I src
+CXXFLAGS += -isystem stan/src -isystem stan/lib/stan_math
+CXXFLAGS += -isystem stan/lib/stan_math/lib/eigen_3.3.9 -isystem stan/lib/stan_math/lib/boost_1.75.0
+CXXFLAGS += -isystem stan/lib/stan_math/lib/sundials_6.0.0/include -isystem stan/lib/stan_math/lib/tbb_2020.3/include
 CXXFLAGS += -std=c++14
 CXXFLAGS += -D_REENTRANT
 CXXFLAGS += -O3
-
 
 MATH := stan/lib/stan_math
 
@@ -25,13 +25,14 @@ TBB_LIBRARIES := $(TBB_LIBRARIES:%=$(MATH)/lib/tbb/lib%.$(LIBRARY_SUFFIX))
 LDLIBS = src/main.o $(TBB_LIBRARIES) -Wl,-L,$(MATH)/lib/tbb -Wl,-rpath,$(MATH)/lib/tbb
 LINK.o = $(LINK.cpp)
 
+ifeq (,$(filter $(MAKECMDGOALS),help install uninstall clean check))
+-include src/main.d
+endif
+
 help:
 	@echo '--------------------------------------------------------------------------------'
 	@echo '--------------------------------------------------------------------------------'
 
-
-all:
-	@echo 'all'
 
 install: bin/stanc stan/src/stan/version.hpp $(MATH)/stan/math/version.hpp src/main.o
 install: $(TBB_LIBRARIES)
@@ -40,7 +41,7 @@ install:
 	@echo 'Installation complete'
 
 uninstall:
-	$(RM) bin/stanc
+	$(RM) bin/stanc src/main.o src/main.d
 	$(MAKE) -C $(MATH) clean-libraries
 	@echo
 	@echo 'uninstall'
@@ -77,6 +78,10 @@ stan/lib/stan_math/stan/math/version.hpp: stan/src/stan/version.hpp
 
 %.cpp: %.stan bin/stanc src/main.o
 	bin/stanc $< --o $@
+
+%.d: %.cpp
+	set -e; rm -f $@; \
+         $(CXX) -M -MT "$*.o $@" $(CXXFLAGS) $< > $@
 
 $(MATH)/lib/tbb/lib%: LIB = $(patsubst $(MATH)/%,%,$@)
 $(MATH)/lib/tbb/lib%: $(MATH)/stan/math/version.hpp

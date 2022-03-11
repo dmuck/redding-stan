@@ -4,4 +4,6 @@
 /bin/stanc.exe
 
 *.o
+*.d
 
+.DS_Store

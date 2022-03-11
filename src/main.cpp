@@ -112,10 +112,11 @@ std::string read() {
     if (!std::cin) {
       std::cin.clear();
       std::clearerr(stdin);
-    } else if (iss >> output && iss.eof()) {
-      std::cout << "[DEBUG] output = " << output << std::endl;
+    } else if (iss >> output) {
+      return input;
+      /*std::cout << "[DEBUG] output = " << output << std::endl;
       msg << output << std::endl;
-      return msg.str();
+      return msg.str();*/
     } else {
       std::cout << "[DEBUG] INPUT = " << input << std::endl;
       std::cout << "Invalid input. Try again.\n";

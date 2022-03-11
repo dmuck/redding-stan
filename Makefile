@@ -80,7 +80,7 @@ stan/lib/stan_math/stan/math/version.hpp: stan/src/stan/version.hpp
 	bin/stanc $< --o $@
 
 %.d: %.cpp
-	set -e; rm -f $@; \
+	@set -e; rm -f $@; \
          $(CXX) -M -MT "$*.o $@" $(CXXFLAGS) $< > $@
 
 $(MATH)/lib/tbb/lib%: LIB = $(patsubst $(MATH)/%,%,$@)

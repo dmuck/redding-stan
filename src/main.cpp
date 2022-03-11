@@ -104,23 +104,21 @@ std::string read() {
   std::string input; 
   std::stringstream msg;
 	
-  while (true) 
-  {
-	echo_prompt();
-	std::getline(std::cin, input);
-	std::istringstream iss(input);
-	if (!std::cin)
-	{
-		std::cin.clear();
-		std::clearerr(stdin);
-  
-	} 
-	else if (iss >> output && iss.eof())
-	{
-		msg << output << std::endl;
-		return msg.str();
-	}
-	else { std::cout << "Invalid input. Try again.\n"; }
+  while (true) {
+    echo_prompt();
+    std::getline(std::cin, input);
+    std::istringstream iss(input);
+    if (!std::cin) {
+      std::cin.clear();
+      std::clearerr(stdin);
+    } 
+    else if (iss >> output && iss.eof()) {
+      msg << output << std::endl;
+      return msg.str();
+    }
+    else {
+      std::cout << "Invalid input. Try again.\n";
+    }
   }
 }
 
@@ -371,56 +369,56 @@ int main(int argc, char* argv[]) {
   }
   return 0;
   /*
-  std::cout << "------------------------------------------------------------" << std::endl;
-  std::cout << "\nWelcome to ReddingStan" << std::endl << std::endl;
-  std::cout << "Number of arguments provided: " << argc << std::endl;
-  std::cout << " * argv[0] is the executable: " << argv[0] << std::endl;
+    std::cout << "------------------------------------------------------------" << std::endl;
+    std::cout << "\nWelcome to ReddingStan" << std::endl << std::endl;
+    std::cout << "Number of arguments provided: " << argc << std::endl;
+    std::cout << " * argv[0] is the executable: " << argv[0] << std::endl;
 
-  std::fstream stream;
-  if (argc > 1) {
+    std::fstream stream;
+    if (argc > 1) {
     std::cout << " * argv[1] is the data file: " << argv[1] << std::endl;
     stream = std::fstream(argv[1], std::fstream::in);
-  }
-  stan::io::dump dump(stream);
+    }
+    stan::io::dump dump(stream);
 
-  // Instantiate the model
-  stan::model::model_base &model
-      = new_model(dump, 0L, &std::cout);
+    // Instantiate the model
+    stan::model::model_base &model
+    = new_model(dump, 0L, &std::cout);
 
-  std::cout << "Model has been instantiated" << std::endl;
+    std::cout << "Model has been instantiated" << std::endl;
 
-  std::string model_name = model.model_name();
-  std::vector<std::string> model_compile_info = model.model_compile_info();
-  size_t num_params_r = model.num_params_r();
-  size_t num_params_i = model.num_params_i();
+    std::string model_name = model.model_name();
+    std::vector<std::string> model_compile_info = model.model_compile_info();
+    size_t num_params_r = model.num_params_r();
+    size_t num_params_i = model.num_params_i();
 
-  std::cout << " * model_name: " << model_name << std::endl;
-  std::cout << " * model_compile_info: " << std::endl;
-  for (std::string info: model_compile_info) {
+    std::cout << " * model_name: " << model_name << std::endl;
+    std::cout << " * model_compile_info: " << std::endl;
+    for (std::string info: model_compile_info) {
     std::cout << "    - " << info << std::endl;
-  }
-  std::cout << " * num_params_r: " << num_params_r << std::endl;
-  std::cout << " * num_params_i: " << num_params_i << std::endl;
+    }
+    std::cout << " * num_params_r: " << num_params_r << std::endl;
+    std::cout << " * num_params_i: " << num_params_i << std::endl;
 
-  // logic from Math's stan/math/rev/functor/gradient.hpp
-  Eigen::Matrix<stan::math::var, -1, 1> parameters = Eigen::MatrixXd::Random(num_params_r, 1);
+    // logic from Math's stan/math/rev/functor/gradient.hpp
+    Eigen::Matrix<stan::math::var, -1, 1> parameters = Eigen::MatrixXd::Random(num_params_r, 1);
   
-  std::cout << " * parameters = " << parameters << std::endl;
+    std::cout << " * parameters = " << parameters << std::endl;
 
-  std::stringstream msg;
-  stan::math::var lp = model.log_prob_propto_jacobian(parameters, &msg);
+    std::stringstream msg;
+    stan::math::var lp = model.log_prob_propto_jacobian(parameters, &msg);
 
-  double lp_val = lp.val();
-  stan::math::grad(lp.vi_);
-  Eigen::VectorXd gradient = parameters.adj();
+    double lp_val = lp.val();
+    stan::math::grad(lp.vi_);
+    Eigen::VectorXd gradient = parameters.adj();
 
-  std::cout << "------------------------------------------------------------" << std::endl;
-  std::cout << " * log prob propto jacobian of parameters: " << lp_val << std::endl;
-  std::cout << " * gradient: " << gradient << std::endl;
-  std::cout << " * message while evaluating log prob: \"" << msg.str() << "\"" << std::endl;
-  std::cout << "------------------------------------------------------------" << std::endl;  
+    std::cout << "------------------------------------------------------------" << std::endl;
+    std::cout << " * log prob propto jacobian of parameters: " << lp_val << std::endl;
+    std::cout << " * gradient: " << gradient << std::endl;
+    std::cout << " * message while evaluating log prob: \"" << msg.str() << "\"" << std::endl;
+    std::cout << "------------------------------------------------------------" << std::endl;  
 
   
-  return 0;
+    return 0;
   */
 }

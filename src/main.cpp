@@ -79,7 +79,7 @@ std::string global_seed(int argc, char* argv[], int index, unsigned int& seed) {
 std::string global_error(int argc, char* argv[]) {
   std::stringstream msg;
   msg << "ReddingStan could not start\n"
-      << "\tPlease check the arguments\n"
+      << "    Please check the arguments\n"
       << std::endl;
 
   return msg.str();
@@ -87,7 +87,7 @@ std::string global_error(int argc, char* argv[]) {
 
 std::string startup() {
   std::stringstream msg;
-  msg << "ReddingStan version 0.1 alpha\n\n"
+  msg << "\nReddingStan, version 1.0\n\n"
       << "ReddingStan is free software and comes with ABSOLUTELY NO WARRANTY.\n\n"
       << "Type 'help' for some help, 'list' a list of commands.\n\n"
       << std::endl;
@@ -119,8 +119,7 @@ std::string read() {
 std::string eval_list() {
   std::stringstream message;
   constexpr int n = 15;
-  message << std::endl
-	  << "List of all commands:" << std::endl;
+  message << "\nList of all commands:" << std::endl;
   add_option(message, n, "list", "list all commands");
   add_option(message, n, "help", "prints basic usage");
   add_option(message, n, "status", "status of the current run");
@@ -301,9 +300,9 @@ std::string eval_eval_J_true(std::istringstream& ss, stan::model::model_base* mo
     Eigen::VectorXd gradient = theta.adj();
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
-    msg << lp.val() << std::endl
-	<< gradient << std::endl
-	<< std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " µs" << std::endl
+    msg << "Log probability: " << lp.val() << "\n"
+	<< "Gradient: " << gradient << "\n"
+	<< "Evaluation time (µs): " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n"
 	<< "\"" << log_prob_message.str() << "\"";
   } catch (std::exception& e) {
     msg << "Error: evaluating at the parameter throws exception" << std::endl
@@ -339,9 +338,9 @@ std::string eval_eval_J_false(std::istringstream& ss, stan::model::model_base* m
     Eigen::VectorXd gradient = theta.adj();
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
-    msg << lp.val() << std::endl
-	<< gradient << std::endl
-	<< std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " µs" << std::endl
+    msg << "Log probability: " << lp.val() << "\n"
+	<< "Gradient: " << gradient << "\n"
+	<< "Evaluation time (µs): " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n"
 	<< "\"" << log_prob_message.str() << "\"";
   } catch (std::exception& e) {
     msg << "Error: evaluating at the parameter throws exception" << std::endl
@@ -374,8 +373,8 @@ std::string eval_eval_J_only(std::istringstream& ss, stan::model::model_base* mo
     double jacobian = lp_jacobian_true - lp_jacobian_false;
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
-    msg << jacobian << std::endl
-	<< std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " µs" << std::endl
+    msg << "Jacobian: " << jacobian << std::endl
+	<< "Execution time (µs): " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n"
 	<< "\"" << log_prob_message.str() << "\"";
   } catch (std::exception& e) {
     msg << "Error: evaluating at the parameter throws exception" << std::endl

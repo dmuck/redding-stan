@@ -18,25 +18,27 @@ int main(int argc, char* argv[]) {
   unsigned int seed = 0;
   std::string data_filename;
   stan::model::model_base *model = nullptr;
-    
+
+  // parse startup options
   if (argc >= 2) {
     for (int ii = 1; ii < argc; ++ii) {
       if (strcmp(argv[ii], "--help") == 0
 	  || strcmp(argv[ii], "-h") == 0) {
-	std::cout << global_help(argc, argv);
+	std::cout << redding::global_help(argc, argv) << std::endl;
 	return 0;
       } else if (strcmp(argv[ii], "--histsize") == 0) {
-	std::cout << global_history_size(argc, argv, ii, history_size);
+	std::cout << redding::global_history_size(argc, argv, ii, history_size) << std::endl;
 	ii++;
       } else if (strcmp(argv[ii], "--seed") == 0) {
-	std::cout << global_seed(argc, argv, ii, seed);
+	std::cout << redding::global_seed(argc, argv, ii, seed) << std::endl;
 	ii++;
       } else {
-	std::cout << global_error(argc, argv);
+	std::cout << redding::global_error(argc, argv) << std::endl;
 	return 1;
       }
     }
   }
+
   std::cout << redding::startup_message() << std::endl;
 
   int count = 0;
@@ -50,12 +52,12 @@ int main(int argc, char* argv[]) {
   }
 
   while (true) {
-    std::string line = read();
-    std::string message = eval(line, count, history,
-			       data_filename,
-			       &model,
-			       start_time,
-			       seed);
+    std::string line = redding::read();
+    std::string message = redding::eval(line, count, history,
+					data_filename,
+					&model,
+					start_time,
+					seed);
 
     std::cout << message << std::endl;
 

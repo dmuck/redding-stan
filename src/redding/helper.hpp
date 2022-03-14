@@ -78,7 +78,7 @@ std::string global_error(int argc, char* argv[]) {
 
 std::string startup() {
   std::stringstream msg;
-  msg << "\nReddingStan, version 1.0\n\n"
+  msg << "\nReddingStan version 1.0\n\n"
       << "ReddingStan is free software and comes with ABSOLUTELY NO WARRANTY.\n\n"
       << "Type 'help' for some help, 'list' a list of commands.\n\n"
       << std::endl;

@@ -47,12 +47,12 @@ int main(int argc, char* argv[]) {
     stan::io::empty_var_context empty;
     model = &new_model(empty, seed, &std::cout);
     std::cout << "* model initialized with no data. Ready." << std::endl << std::endl;
-  } catch (const std::exception& e) {
+ } catch (const std::exception& e) {
     //no op
   }
 
   while (true) {
-    std::string line = redding::read();
+    std::string line = redding::read_std_cin();
     std::string message = redding::eval(line, count, history,
 					data_filename,
 					&model,

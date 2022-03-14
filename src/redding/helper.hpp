@@ -31,9 +31,9 @@ namespace redding {
     add_option(msg, n, "-h, --help", "Print short help message and exit");
     add_option(msg, n, "--histsize", "Set the history size. Default is 25");
 
-    msg << "\n\n"
+    msg << "\n"
 	<< "Report bugs at https://github.com/dmuck/redding-stan"
-	<< "\n";
+	<< "\n\n";
   
     return msg.str();
   }
@@ -44,12 +44,13 @@ namespace redding {
     if (argc <= index + 1)
       return "Please provide the history size\n";
 
-    std::stringstream msg;
-    msg << "* Setting history size from " << history_size << " to ";
-  
+    int orig_history_size = history_size;
+    
     std::istringstream imsg(argv[index + 1]);
     imsg >> history_size;
-    msg << history_size;
+    
+    std::stringstream msg;
+    msg << "[INFO] Setting history size from " << orig_history_size << " to " << history_size;
     return msg.str();
   }
 
@@ -59,12 +60,13 @@ namespace redding {
     if (argc <= index + 1)
       return "Please provide the random seed\n";
 
-    std::stringstream msg;
-    msg << "* Setting random seed from " << seed << " to ";
-  
+    unsigned int orig_seed = seed;
+    
     std::istringstream imsg(argv[index + 1]);
     imsg >> seed;
-    msg << seed;
+
+    std::stringstream msg;
+    msg << "[INFO] Setting random seed from " << orig_seed << " to " << seed;
     return msg.str();
   }
 
@@ -92,7 +94,7 @@ Type 'help' for some help, 'list' a list of commands.
     return;
   }
 
-  std::string read() {
+  std::string read_std_cin() {
     std::string input; 
 	
     while (true) {
@@ -123,8 +125,8 @@ Type 'help' for some help, 'list' a list of commands.
     add_option(message, n, "eval_J_true", "evaluate model at an unconstrained parameter value with Jacobian adjustment");
     add_option(message, n, "eval_J_false", "evaluate model at an unconstrained parameter value without Jaciobian adjustment");
     add_option(message, n, "eval_J_only", "evaluate Jacobian only");
-    add_option(message, n, "constrain", "prints constrained values from parameter values");
-    add_option(message, n, "unconstrain", "prints parameter values from a constrained value");
+    //add_option(message, n, "constrain", "prints constrained values from parameter values");
+    //add_option(message, n, "unconstrain", "prints parameter values from a constrained value");
     add_option(message, n, "history", "prints history");
     add_option(message, n, "clear", "clear history");
     add_option(message, n, "quit", "quit");
@@ -268,6 +270,34 @@ Type 'help' for some help, 'list' a list of commands.
     return theta;
   }
 
+  std::string trim(const std::string& s) {
+    const std::string WHITESPACE = " \n\r\t\f\v";
+    size_t end = s.find_last_not_of(WHITESPACE);
+    return (end == std::string::npos) ? "" : s.substr(0, end + 1);
+  }
+  
+  std::string format_output(const double& value, const Eigen::VectorXd& gradient,
+			    const std::chrono::steady_clock::time_point& start,
+			    const std::chrono::steady_clock::time_point& end,
+			    const std::string& message) {
+    std::stringstream msg;
+    msg << value << "\n"
+	<< gradient << "\n"
+	<< std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n"
+	<< "\"" << trim(message) << "\"";
+    return msg.str();
+  }
+
+  std::string format_output(const double& value,
+			    const std::chrono::steady_clock::time_point& start,
+			    const std::chrono::steady_clock::time_point& end,
+			    const std::string& message) {
+    std::stringstream msg;
+    msg << value << "\n"
+	<< std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n"
+	<< "\"" << trim(message) << "\"";
+    return msg.str();
+  }
 
   std::string eval_eval_J_true(std::istringstream& ss, stan::model::model_base* model) {
     if (model == nullptr) {
@@ -281,19 +311,15 @@ Type 'help' for some help, 'list' a list of commands.
       return e.what();
     }
 
+    std::stringstream msg;
     std::stringstream log_prob_message;
-    std::stringstream msg;  
     try {
       std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
       stan::math::var lp = model->log_prob_propto_jacobian(theta, &log_prob_message);
       stan::math::grad(lp.vi_);
       Eigen::VectorXd gradient = theta.adj();
       std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-
-      msg << "Log probability: " << lp.val() << "\n"
-	  << "Gradient: " << gradient << "\n"
-	  << "Evaluation time (µs): " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n"
-	  << "\"" << log_prob_message.str() << "\"";
+      msg << format_output(lp.val(), gradient, start, end, log_prob_message.str());
     } catch (std::exception& e) {
       msg << "Error: evaluating at the parameter throws exception\n"
 	  << log_prob_message.str() << "\n"
@@ -328,10 +354,7 @@ Type 'help' for some help, 'list' a list of commands.
       Eigen::VectorXd gradient = theta.adj();
       std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
-      msg << "Log probability: " << lp.val() << "\n"
-	  << "Gradient: " << gradient << "\n"
-	  << "Evaluation time (µs): " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n"
-	  << "\"" << log_prob_message.str() << "\"";
+      msg << format_output(lp.val(), gradient, start, end, log_prob_message.str());      
     } catch (std::exception& e) {
       msg << "Error: evaluating at the parameter throws exception\n"
 	  << log_prob_message.str() << "\n"
@@ -363,9 +386,7 @@ Type 'help' for some help, 'list' a list of commands.
       double jacobian = lp_jacobian_true - lp_jacobian_false;
       std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
-      msg << "Jacobian: " << jacobian << "\n"
-	  << "Execution time (µs): " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n"
-	  << "\"" << log_prob_message.str() << "\"";
+      msg << format_output(lp.val(), start, end, log_prob_message.str());      
     } catch (std::exception& e) {
       msg << "Error: evaluating at the parameter throws exception\n"
 	  << log_prob_message.str() << "\n"
@@ -404,14 +425,20 @@ Type 'help' for some help, 'list' a list of commands.
       return eval_eval_J_false(ss, *model);
     } else if (command == "eval_J_only") {
       return eval_eval_J_only(ss, *model);
-    } else if (command == "constrain") {
+      /*
+      // FIXME: implement constrain and unconstrain
+      } else if (command == "constrain") {
       return "FIXME constrain";
-    } else if (command == "unconstrain") {
+      } else if (command == "unconstrain") {
       return "FIXME unconstrain";
+      */
     } else if (command == "history") {
       return eval_history(count, history);
-    } else if (command == "clear") {
+      /*
+      // TODO: implement clear
+      } else if (command == "clear") {
       return "FIXME clear";
+      */
     } else if (command == "quit") {
       exit(0);
     }

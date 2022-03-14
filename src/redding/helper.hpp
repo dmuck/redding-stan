@@ -1,7 +1,6 @@
 #ifndef REDDING_HELPER_HPP
 #define REDDING_HELPER_HPP
 
-
 // forward declaration for function defined in another translation unit
 stan::model::model_base &new_model(stan::io::var_context &data_context,
                                    unsigned int seed, std::ostream *msg_stream);
@@ -14,7 +13,7 @@ void add_option(std::stringstream& message, const int width,
   message << "";
   message.width(width);
   message << std::left << command
-	  << description << std::endl;
+	  << description << "\n";
 }
 
 std::string global_help(int argc, char* argv[]) {
@@ -23,16 +22,16 @@ std::string global_help(int argc, char* argv[]) {
       << "Start ReddingStan, a command-line program "
       << "that smuggles log probabilities and \n"
       << "gradients out of a Stan model.\n"
-      << std::endl;
+      << "\n";
 
   const int n = 15;
-  msg << "Options:" << std::endl;
+  msg << "Options:\n";
   add_option(msg, n, "-h, --help", "Print short help message and exit");
   add_option(msg, n, "--histsize", "Set the history size. Default is 25");
 
-  msg << std::endl
-      << "\nReport bugs at https://github.com/dmuck/redding-stan \n"
-      << std::endl;
+  msg << "\n\n"
+      << "Report bugs at https://github.com/dmuck/redding-stan"
+      << "\n\n";
   
   return msg.str();
 }
@@ -48,7 +47,7 @@ std::string global_history_size(int argc, char* argv[], int index, int& history_
   
   std::istringstream imsg(argv[index + 1]);
   imsg >> history_size;
-  msg << history_size << std::endl;
+  msg << history_size << "\n";
   return msg.str();
 }
 
@@ -63,26 +62,31 @@ std::string global_seed(int argc, char* argv[], int index, unsigned int& seed) {
   
   std::istringstream imsg(argv[index + 1]);
   imsg >> seed;
-  msg << seed << std::endl;
+  msg << seed << "\n";
   return msg.str();
 }
 
 std::string global_error(int argc, char* argv[]) {
   std::stringstream msg;
   msg << "ReddingStan could not start\n"
-      << "\tPlease check the arguments\n"
-      << std::endl;
+      << "  Please check the arguments\n"
+      << "\n";
 
   return msg.str();
 }
 
-std::string startup() {
-  std::stringstream msg;
-  msg << "\nReddingStan version 1.0\n\n"
-      << "ReddingStan is free software and comes with ABSOLUTELY NO WARRANTY.\n\n"
-      << "Type 'help' for some help, 'list' a list of commands.\n\n"
-      << std::endl;
-  return msg.str();
+namespace redding {
+
+  std::string startup_message() {
+    return R""""(
+ReddingStan version 1.0
+
+ReddingStan is free software and comes with ABSOLUTELY NO WARRANTY.
+
+Type 'help' for some help, 'list' a list of commands.
+)"""";
+  }
+  
 }
 
 void echo_prompt() {
@@ -102,7 +106,7 @@ std::string read() {
     } else if (input.length() > 0) {
       return input;
     } else {
-      std::cout << "Invalid input. Try again.\n";
+      std::cout << "Invalid input. Try again." << std::endl;
     }
   }
 }
@@ -110,7 +114,7 @@ std::string read() {
 std::string eval_list() {
   std::stringstream message;
   constexpr int n = 15;
-  message << "\nList of all commands:" << std::endl;
+  message << "\nList of all commands:\n";
   add_option(message, n, "list", "list all commands");
   add_option(message, n, "help", "prints basic usage");
   add_option(message, n, "status", "status of the current run");
@@ -138,9 +142,8 @@ std::string eval_history(const int count, const std::deque<std::string>& history
     msg << "";
     msg.width(6);
     msg << std::left << ii;
-    msg << history[ii] << std::endl;
+    msg << history[ii] << "\n";
   }
-
   return msg.str();
 }
 
@@ -151,17 +154,16 @@ std::string eval_status(const stan::model::model_base* model, const int count,
   std::time_t time = std::chrono::system_clock::to_time_t(start_time);
   int seconds = std::chrono::duration_cast<std::chrono::seconds>(now - start_time).count();
 
-  msg << "ReddingStan started at " << std::ctime(&time) << std::endl
+  msg << "ReddingStan started at " << std::ctime(&time) << "\n"
       << "   elapsed time:              "
-      << seconds / 60 << " minutes " << seconds % 60 << " seconds"<< std::endl
-      << "   number of commands called: " << count << std::endl
-      << std::endl;
+      << seconds / 60 << " minutes " << seconds % 60 << " seconds\n"
+      << "   number of commands called: " << count << "\n\n";
   if (model == nullptr) {
-    msg << "The model is uninitialized. Please use the 'load' command." << std::endl;
+    msg << "The model is uninitialized. Please use the 'load' command.\n";
   } else {
-    msg << "The model is initialized" << std::endl
-	<< "  * data file:                          \"" << data_filename << "\"" << std::endl
-	<< "  * number of unconstrained parameters: " << model->num_params_r() << std::endl;
+    msg << "The model is initialized\n"
+	<< "  * data file:                          \"" << data_filename << "\"\n"
+	<< "  * number of unconstrained parameters: " << model->num_params_r() << "\n";
   }
   return msg.str();
 }
@@ -194,12 +196,11 @@ std::string eval_load(std::istringstream& ss, stan::model::model_base** model,
     
     stan::io::dump var_context(stream);
     *model = &new_model(var_context, seed, &std::cout);
-    msg << "* model initialized with data from \"" << data_filename << "\""
-	<< std::endl;
+    msg << "* model initialized with data from \"" << data_filename << "\"\n";
   } catch (const std::exception& e) {
     msg << "Error: model could not be initialized. See error message from Stan: "
-	<< std::endl << std::endl
-	<< e.what() << std::endl;
+	<< "\n\n"
+	<< e.what() << "\n";
   }
   return msg.str();
 }
@@ -224,7 +225,7 @@ Eigen::Matrix<stan::math::var, -1, 1> parse_parameters(std::istringstream& ss,
       theta[n] = std::stod(substr);
     } catch (std::exception& e) {
       stan::math::recover_memory();
-      msg << "Error: issue parsing parameter value from string." << std::endl
+      msg << "Error: issue parsing parameter value from string.\n"
 	  << "\"" << e.what() << "\"";
       throw std::invalid_argument(msg.str());      
     }
@@ -256,7 +257,7 @@ Eigen::Matrix<double, -1, 1> parse_parameters_double(std::istringstream& ss,
     try {
       theta[n] = std::stod(substr);
     } catch (std::exception& e) {
-      msg << "Error: issue parsing parameter value from string." << std::endl
+      msg << "Error: issue parsing parameter value from string.\n"
 	  << "\"" << e.what() << "\"";
       throw std::invalid_argument(msg.str());      
     }
@@ -296,8 +297,8 @@ std::string eval_eval_J_true(std::istringstream& ss, stan::model::model_base* mo
 	<< "Evaluation time (µs): " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n"
 	<< "\"" << log_prob_message.str() << "\"";
   } catch (std::exception& e) {
-    msg << "Error: evaluating at the parameter throws exception" << std::endl
-	<< log_prob_message.str() << std::endl
+    msg << "Error: evaluating at the parameter throws exception\n"
+	<< log_prob_message.str() << "\n"
 	<< e.what();
   }
   stan::math::recover_memory();
@@ -334,8 +335,8 @@ std::string eval_eval_J_false(std::istringstream& ss, stan::model::model_base* m
 	<< "Evaluation time (µs): " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n"
 	<< "\"" << log_prob_message.str() << "\"";
   } catch (std::exception& e) {
-    msg << "Error: evaluating at the parameter throws exception" << std::endl
-	<< log_prob_message.str() << std::endl
+    msg << "Error: evaluating at the parameter throws exception\n"
+	<< log_prob_message.str() << "\n"
 	<< e.what();
   }
   stan::math::recover_memory();
@@ -364,12 +365,12 @@ std::string eval_eval_J_only(std::istringstream& ss, stan::model::model_base* mo
     double jacobian = lp_jacobian_true - lp_jacobian_false;
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
-    msg << "Jacobian: " << jacobian << std::endl
+    msg << "Jacobian: " << jacobian << "\n"
 	<< "Execution time (µs): " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n"
 	<< "\"" << log_prob_message.str() << "\"";
   } catch (std::exception& e) {
-    msg << "Error: evaluating at the parameter throws exception" << std::endl
-	<< log_prob_message.str() << std::endl
+    msg << "Error: evaluating at the parameter throws exception\n"
+	<< log_prob_message.str() << "\n"
 	<< e.what();
   }
   return msg.str();
@@ -419,11 +420,6 @@ std::string eval(std::string& line, const int count, const std::deque<std::strin
   
   message << "Error: unknown command \"" << command << "\"";
   return message.str();
-}
-
-void print(std::string& message) {
-  std::cout << message << std::endl;
-  return;
 }
 
 #endif

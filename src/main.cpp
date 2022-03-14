@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
       }
     }
   }
-  std::cout << startup();
+  std::cout << redding::startup_message() << std::endl;
 
   int count = 0;
   std::deque<std::string> history(history_size);

@@ -1,6 +1,8 @@
 #ifndef REDDING_HELPER_HPP
 #define REDDING_HELPER_HPP
 
+#include <vector>
+
 // forward declaration for function defined in another translation unit
 stan::model::model_base &new_model(stan::io::var_context &data_context,
                                    unsigned int seed, std::ostream *msg_stream);
@@ -10,12 +12,29 @@ using time_point_t = std::chrono::time_point<std::chrono::system_clock>;
 namespace redding {
 
   void add_option(std::stringstream& message, const int width,
-		  const std::string command, const std::string description) {
+		  const std::string& command, const std::string& description) {
     message.width(2);
     message << "";
     message.width(width);
     message << std::left << command
 	    << description << "\n";
+  }
+
+  void add_option(std::stringstream& message, const int width,
+		  const std::string& command, const std::vector<std::string> description_lines) {
+    message.width(2);
+    message << "";
+    message.width(width);
+    message << std::left << command << "";
+
+    for (int n = 0; n < description_lines.size(); ++n) {
+      if (n == 0) {
+	message << description_lines[n] << "\n";
+      } else {
+	message.width(width + 2);
+	message << std::left << "" << description_lines[n] << "\n";
+      }
+    }
   }
 
   std::string global_help(int argc, char* argv[]) {
@@ -34,7 +53,7 @@ namespace redding {
     msg << "\n"
 	<< "Report bugs at https://github.com/dmuck/redding-stan"
 	<< "\n\n";
-  
+
     return msg.str();
   }
 
@@ -45,10 +64,10 @@ namespace redding {
       return "Please provide the history size\n";
 
     int orig_history_size = history_size;
-    
+
     std::istringstream imsg(argv[index + 1]);
     imsg >> history_size;
-    
+
     std::stringstream msg;
     msg << "[INFO] Setting history size from " << orig_history_size << " to " << history_size;
     return msg.str();
@@ -61,7 +80,7 @@ namespace redding {
       return "Please provide the random seed\n";
 
     unsigned int orig_seed = seed;
-    
+
     std::istringstream imsg(argv[index + 1]);
     imsg >> seed;
 
@@ -88,15 +107,15 @@ ReddingStan is free software and comes with ABSOLUTELY NO WARRANTY.
 Type 'help' for some help, 'list' a list of commands.
 )"""";
   }
-  
+
   void echo_prompt() {
     std::cout << "[redding]$ " << std::flush;
     return;
   }
 
   std::string read_std_cin() {
-    std::string input; 
-	
+    std::string input;
+
     while (true) {
       echo_prompt();
       std::getline(std::cin, input);
@@ -121,10 +140,38 @@ Type 'help' for some help, 'list' a list of commands.
     add_option(message, n, "N", "number of parameters in the model");
     add_option(message, n, "load", "loads data");
     add_option(message, n, "unload", "unloads data");
-    add_option(message, n, "eval", "evaluate model at an unconstrained parameter value; equiv to `eval_J_true`"); 
-    add_option(message, n, "eval_J_true", "evaluate model at an unconstrained parameter value with Jacobian adjustment");
-    add_option(message, n, "eval_J_false", "evaluate model at an unconstrained parameter value without Jaciobian adjustment");
-    add_option(message, n, "eval_J_only", "evaluate Jacobian only");
+
+    const std::vector<std::string> eval_description = {
+      "evaluate log probability of the model at an unconstrained parameter value",
+      "dropping constants; equivalent to `eval_J_true`"
+    };
+    add_option(message, n, "eval", eval_description);
+
+    const std::vector<std::string> eval_description_J_true = {
+      "evaluate log probability of the model at an unconstrained parameter value",
+      "dropping constants with Jacobian adjustment. Output:",
+      "  Line 1:  log prob",
+      "  Line 2:  gradient; length N",
+      "  Line 3:  evaluation time (μs)",
+      "  Line 4+: messages from the program"
+    };
+    add_option(message, n, "eval_J_true", eval_description_J_true);
+
+    const std::vector<std::string> eval_description_J_false = {
+      "evaluate log probability of the model at an unconstrained parameter value",
+      "dropping constants excluding Jacobian adjustment. Output format is the same",
+      "as `eval_J_true`."
+    };
+    add_option(message, n, "eval_J_false", eval_description_J_false);
+
+    const std::vector<std::string> eval_description_J_only = {
+      "evaluate the log absolute determinant of the Jacobian. This does not include",
+      "a gradient. Output:",
+      "  Line 1:  log prob",
+      "  Line 2:  evaluation time (μs)",
+      "  Line 3+: messages from the program"
+    };
+    add_option(message, n, "eval_J_only", eval_description_J_only);
     //add_option(message, n, "constrain", "prints constrained values from parameter values");
     //add_option(message, n, "unconstrain", "prints parameter values from a constrained value");
     add_option(message, n, "history", "prints history");
@@ -136,7 +183,8 @@ Type 'help' for some help, 'list' a list of commands.
   std::string eval_help() {
     std::stringstream message;
 
-    message << "Welcome to ReddingStan.\n"
+    message << "\n"
+	    << "Welcome to ReddingStan.\n"
 	    << "\n"
 	    << "This is a command-line program that smuggles log probabilities\n"
 	    << "and gradients out of a Stan program.\n"
@@ -190,15 +238,15 @@ Type 'help' for some help, 'list' a list of commands.
       msg << "The model is uninitialized. Please use the 'load' command.\n";
     } else {
       msg << "The model is initialized\n"
-	  << "  * data file:                          \"" << data_filename << "\"\n"
-	  << "  * number of unconstrained parameters: " << model->num_params_r() << "\n";
+	  << "  - data file:                          \"" << data_filename << "\"\n"
+	  << "  - number of unconstrained parameters: " << model->num_params_r() << "\n";
     }
     return msg.str();
   }
 
   std::string eval_N(const stan::model::model_base* model) {
     if (model == nullptr) {
-      return "Error: The model is uninitialized. Please use the 'load' command.\n";
+      return "[ERROR] The model is uninitialized. Please use the 'load' command.\n";
     }
     return std::to_string(model->num_params_r());
   }
@@ -221,23 +269,34 @@ Type 'help' for some help, 'list' a list of commands.
     std::stringstream msg;
     try {
       std::fstream stream(data_filename, std::fstream::in);
-    
+
       stan::io::dump var_context(stream);
       *model = &new_model(var_context, seed, &std::cout);
-      msg << "* model initialized with data from \"" << data_filename << "\"\n";
+      msg << "[INFO] model initialized with data from \"" << data_filename << "\"\n";
     } catch (const std::exception& e) {
-      msg << "Error: model could not be initialized. See error message from Stan: "
+      msg << "[ERROR] model could not be initialized. See error message from Stan: "
 	  << "\n\n"
 	  << e.what() << "\n";
     }
     return msg.str();
   }
 
+  std::string eval_unload(std::istringstream& ss, stan::model::model_base** model,
+			  std::string& data_filename, const unsigned int seed) {
+    
+    if (*model != nullptr) {
+      delete *model;
+      *model = nullptr;
+    }
+    data_filename = "";
+    return "[INFO] model uninitialized";
+  }
+
   // precondition: model is not nullptr
   Eigen::Matrix<stan::math::var, -1, 1> parse_parameters(std::istringstream& ss,
 							 stan::model::model_base* model) {
     const int N = model->num_params_r();
-    Eigen::Matrix<stan::math::var, -1, 1> theta(N);  
+    Eigen::Matrix<stan::math::var, -1, 1> theta(N);
     std::stringstream msg;
 
     for (int n = 0; n < N; ++n) {
@@ -253,15 +312,15 @@ Type 'help' for some help, 'list' a list of commands.
 	theta[n] = std::stod(substr);
       } catch (std::exception& e) {
 	stan::math::recover_memory();
-	msg << "Error: issue parsing parameter value from string.\n"
+	msg << "[ERROR] issue parsing parameter value from string.\n"
 	    << "\"" << e.what() << "\"";
-	throw std::invalid_argument(msg.str());      
+	throw std::invalid_argument(msg.str());
       }
     }
     if (ss.good()) {
       stan::math::recover_memory();
-      msg << "Error: too many parameters provided. Expecting only " << N << " values.";
-      throw std::invalid_argument(msg.str());    
+      msg << "[ERROR] too many parameters provided. Expecting only " << N << " values.";
+      throw std::invalid_argument(msg.str());
     }
     return theta;
   }
@@ -271,12 +330,12 @@ Type 'help' for some help, 'list' a list of commands.
   Eigen::Matrix<double, -1, 1> parse_parameters_double(std::istringstream& ss,
 						       stan::model::model_base* model) {
     const int N = model->num_params_r();
-    Eigen::Matrix<double, -1, 1> theta(N);  
+    Eigen::Matrix<double, -1, 1> theta(N);
     std::stringstream msg;
 
     for (int n = 0; n < N; ++n) {
       if (!ss.good()) {
-	msg << "Error: only " << n + 1 << " parameter values provided. Needs " << N << ".";
+	msg << "[ERROR] only " << n + 1 << " parameter values provided. Needs " << N << ".";
 	throw std::invalid_argument(msg.str());
       }
 
@@ -285,15 +344,15 @@ Type 'help' for some help, 'list' a list of commands.
       try {
 	theta[n] = std::stod(substr);
       } catch (std::exception& e) {
-	msg << "Error: issue parsing parameter value from string.\n"
+	msg << "[ERROR] issue parsing parameter value from string.\n"
 	    << "\"" << e.what() << "\"";
-	throw std::invalid_argument(msg.str());      
+	throw std::invalid_argument(msg.str());
       }
     }
     if (ss.good()) {
       stan::math::recover_memory();
-      msg << "Error: too many parameters provided. Expecting only " << N << " values.";
-      throw std::invalid_argument(msg.str());    
+      msg << "[ERROR] too many parameters provided. Expecting only " << N << " values.";
+      throw std::invalid_argument(msg.str());
     }
     return theta;
   }
@@ -303,7 +362,7 @@ Type 'help' for some help, 'list' a list of commands.
     size_t end = s.find_last_not_of(WHITESPACE);
     return (end == std::string::npos) ? "" : s.substr(0, end + 1);
   }
-  
+
   std::string format_output(const double& value, const Eigen::VectorXd& gradient,
 			    const std::chrono::steady_clock::time_point& start,
 			    const std::chrono::steady_clock::time_point& end,
@@ -329,7 +388,7 @@ Type 'help' for some help, 'list' a list of commands.
 
   std::string eval_eval_J_true(std::istringstream& ss, stan::model::model_base* model) {
     if (model == nullptr) {
-      return "Error: the model is uninitialized. Please use the 'load' command.\n";
+      return "[ERROR] the model is uninitialized. Please use the 'load' command.\n";
     }
 
     Eigen::Matrix<stan::math::var, -1, 1> theta;
@@ -349,7 +408,7 @@ Type 'help' for some help, 'list' a list of commands.
       std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
       msg << format_output(lp.val(), gradient, start, end, log_prob_message.str());
     } catch (std::exception& e) {
-      msg << "Error: evaluating at the parameter throws exception\n"
+      msg << "[ERROR] evaluating at the parameter throws exception\n"
 	  << log_prob_message.str() << "\n"
 	  << e.what();
     }
@@ -363,7 +422,7 @@ Type 'help' for some help, 'list' a list of commands.
 
   std::string eval_eval_J_false(std::istringstream& ss, stan::model::model_base* model) {
     if (model == nullptr) {
-      return "Error: the model is uninitialized. Please use the 'load' command.\n";
+      return "[ERROR] the model is uninitialized. Please use the 'load' command.\n";
     }
 
     Eigen::Matrix<stan::math::var, -1, 1> theta;
@@ -382,9 +441,9 @@ Type 'help' for some help, 'list' a list of commands.
       Eigen::VectorXd gradient = theta.adj();
       std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
-      msg << format_output(lp.val(), gradient, start, end, log_prob_message.str());      
+      msg << format_output(lp.val(), gradient, start, end, log_prob_message.str());
     } catch (std::exception& e) {
-      msg << "Error: evaluating at the parameter throws exception\n"
+      msg << "[ERROR] evaluating at the parameter throws exception\n"
 	  << log_prob_message.str() << "\n"
 	  << e.what();
     }
@@ -394,7 +453,7 @@ Type 'help' for some help, 'list' a list of commands.
 
   std::string eval_eval_J_only(std::istringstream& ss, stan::model::model_base* model) {
     if (model == nullptr) {
-      return "Error: the model is uninitialized. Please use the 'load' command.\n";
+      return "[ERROR] the model is uninitialized. Please use the 'load' command.\n";
     }
 
     Eigen::Matrix<double, -1, 1> theta;
@@ -414,9 +473,9 @@ Type 'help' for some help, 'list' a list of commands.
       double jacobian = lp_jacobian_true - lp_jacobian_false;
       std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
-      msg << format_output(jacobian, start, end, log_prob_message.str());      
+      msg << format_output(jacobian, start, end, log_prob_message.str());
     } catch (std::exception& e) {
-      msg << "Error: evaluating at the parameter throws exception\n"
+      msg << "[ERROR] evaluating at the parameter throws exception\n"
 	  << log_prob_message.str() << "\n"
 	  << e.what();
     }
@@ -432,7 +491,7 @@ Type 'help' for some help, 'list' a list of commands.
     std::istringstream ss(line);
     std::stringstream message;
     ss >> command;
-  
+
     if (command == "list") {
       return eval_list();
     } else if (command == "help") {
@@ -444,7 +503,7 @@ Type 'help' for some help, 'list' a list of commands.
     } else if (command == "load") {
       return eval_load(ss, model, data_filename, seed);
     } else if (command == "unload") {
-      return "FIXME unload";
+      return eval_unload(ss, model, data_filename, seed);
     } else if (command == "eval") {
       return eval_eval(ss, *model);
     } else if (command == "eval_J_true") {
@@ -470,8 +529,8 @@ Type 'help' for some help, 'list' a list of commands.
     } else if (command == "quit") {
       exit(0);
     }
-  
-    message << "Error: unknown command \"" << command << "\"";
+
+    message << "[ERROR] unknown command \"" << command << "\"";
     return message.str();
   }
 }

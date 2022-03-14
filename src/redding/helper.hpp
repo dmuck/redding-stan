@@ -23,7 +23,7 @@ namespace redding {
     msg << "\nUsage: " << argv[0] << " [options]\n\n"
 	<< "Start ReddingStan, a command-line program "
 	<< "that smuggles log probabilities and \n"
-	<< "gradients out of a Stan model.\n"
+	<< "gradients out of a Stan program.\n"
 	<< "\n";
 
     const int n = 15;
@@ -130,6 +130,34 @@ Type 'help' for some help, 'list' a list of commands.
     add_option(message, n, "history", "prints history");
     add_option(message, n, "clear", "clear history");
     add_option(message, n, "quit", "quit");
+    return message.str();
+  }
+
+  std::string eval_help() {
+    std::stringstream message;
+
+    message << "Welcome to ReddingStan.\n"
+	    << "\n"
+	    << "This is a command-line program that smuggles log probabilities\n"
+	    << "and gradients out of a Stan program.\n"
+	    << "\n"
+	    << "Typical steps:\n"
+	    << "1. Load a dataset (if required). See `load`.\n"
+	    << "2. Evaluate! Pass in unconstrained parameter values (comma separated),\n"
+	    << "             get out log probability distribution function and gradients.\n"
+	    << "\n"
+	    << "   `eval_J_true`:  includes the log absolute determinant of the Jacobian\n"
+	    << "   `eval_J_false`: computes the lpdf without the Jacobian adjustment\n"
+	    << "   `eval_J_only`:  computes the log absolute determinant of the Jacobian\n"
+	    << "   `eval`:         is an alias for `eval_J_true`.\n"
+	    << "\n"
+	    << "   The output from these commands are meant to be parsed from a program:\n"
+	    << "      Line 1:  the scalar value of what's being requested\n"
+	    << "      Line 2:  the gradient as a comma-separated string;\n"
+	    << "               not applicable for `eval_J_only`\n"
+	    << "      Line 3:  evaluation time in microseconds\n"
+	    << "      Line 4+: messages from the Stan program\n"
+	    << "\n";
     return message.str();
   }
 
@@ -408,7 +436,7 @@ Type 'help' for some help, 'list' a list of commands.
     if (command == "list") {
       return eval_list();
     } else if (command == "help") {
-      return "FIXME help";
+      return eval_help();
     } else if (command == "status") {
       return eval_status(*model, count, start_time, data_filename);
     } else if (command == "N") {

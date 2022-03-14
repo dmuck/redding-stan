@@ -386,7 +386,7 @@ Type 'help' for some help, 'list' a list of commands.
       double jacobian = lp_jacobian_true - lp_jacobian_false;
       std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
-      msg << format_output(lp.val(), start, end, log_prob_message.str());      
+      msg << format_output(jacobian, start, end, log_prob_message.str());      
     } catch (std::exception& e) {
       msg << "Error: evaluating at the parameter throws exception\n"
 	  << log_prob_message.str() << "\n"

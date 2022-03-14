@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
   try {
     stan::io::empty_var_context empty;
     model = &new_model(empty, seed, &std::cout);
-    std::cout << "* model initialized with no data. Ready." << std::endl << std::endl;
+    std::cout << "[INFO] Model initialized with no data. Ready." << std::endl << std::endl;
  } catch (const std::exception& e) {
     //no op
   }

@@ -149,7 +149,7 @@ Type 'help' for some help, 'list' a list of commands.
 
     const std::vector<std::string> eval_description_J_true = {
       "evaluate log probability of the model at an unconstrained parameter value",
-      "dropping constants with Jacobian adjustment. Output:",
+      "with Jacobian adjustment, dropping constants. Output:",
       "  Line 1:  log prob",
       "  Line 2:  gradient; length N",
       "  Line 3:  evaluation time (μs)",
@@ -159,13 +159,13 @@ Type 'help' for some help, 'list' a list of commands.
 
     const std::vector<std::string> eval_description_J_false = {
       "evaluate log probability of the model at an unconstrained parameter value",
-      "dropping constants excluding Jacobian adjustment. Output format is the same",
+      "excluding Jacobian adjustment, dropping constants. Output format is the same",
       "as `eval_J_true`."
     };
     add_option(message, n, "eval_J_false", eval_description_J_false);
 
     const std::vector<std::string> eval_description_J_only = {
-      "evaluate the log absolute determinant of the Jacobian. This does not include",
+      "evaluate the log absolute determinant of the Jacobian; does not include",
       "a gradient. Output:",
       "  Line 1:  log prob",
       "  Line 2:  evaluation time (μs)",
@@ -175,7 +175,7 @@ Type 'help' for some help, 'list' a list of commands.
     //add_option(message, n, "constrain", "prints constrained values from parameter values");
     //add_option(message, n, "unconstrain", "prints parameter values from a constrained value");
     add_option(message, n, "history", "prints history");
-    add_option(message, n, "clear", "clear history");
+    //add_option(message, n, "clear", "clear history");
     add_option(message, n, "quit", "quit");
     return message.str();
   }
@@ -230,7 +230,7 @@ Type 'help' for some help, 'list' a list of commands.
     std::time_t time = std::chrono::system_clock::to_time_t(start_time);
     int seconds = std::chrono::duration_cast<std::chrono::seconds>(now - start_time).count();
 
-    msg << "ReddingStan started at " << std::ctime(&time) << "\n"
+    msg << "[INFO] ReddingStan started at " << std::ctime(&time) << "\n"
 	<< "   elapsed time:              "
 	<< seconds / 60 << " minutes " << seconds % 60 << " seconds\n"
 	<< "   number of commands called: " << count << "\n\n";
@@ -302,7 +302,7 @@ Type 'help' for some help, 'list' a list of commands.
     for (int n = 0; n < N; ++n) {
       if (!ss.good()) {
 	stan::math::recover_memory();
-	msg << "Error: only " << n + 1 << " parameter values provided. Needs " << N << ".";
+	msg << "[ERROR] only " << n << " parameter values provided. Needs " << N << ".";
 	throw std::invalid_argument(msg.str());
       }
 
@@ -335,7 +335,7 @@ Type 'help' for some help, 'list' a list of commands.
 
     for (int n = 0; n < N; ++n) {
       if (!ss.good()) {
-	msg << "[ERROR] only " << n + 1 << " parameter values provided. Needs " << N << ".";
+	msg << "[ERROR] only " << n << " parameter values provided. Needs " << N << ".";
 	throw std::invalid_argument(msg.str());
       }
 

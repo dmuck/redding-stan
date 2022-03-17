@@ -31,21 +31,21 @@ Inside of a ReddingStan program, the commands `list` and `help` provide informat
 	- Line 3: the evaluation time, in microseconds
 	- Line 4+: messages from the Stan program; a string
 
-For more information about how these quantities are evaluated and produced in the underyling C++ code, see the [Redding-Rules](FIXME.link) page for an overview of the [helper.hpp](FIXME.link) file and references to the Stan Math codebase.
-
-See the [Examples](FIXME.link) page for more information on using ReddingStan.
+For more information about how these quantities are evaluated and produced in the underyling C++ code, see the [ReddingStan Technical Overview](/src/redding_overview.md) page for an overview of the program and its relationship with the Stan Math codebase.
 
 ## Using ReddingStan from the command line  
 
-To demonstrate the basic functionality, use the example in the [CmdStan](https://github.com/stan-dev/cmdstan/tree/develop/examples/bernoulli) repository:
-1. Ensure that the `bernoulli.stan` and `bernoulli.data.R` files are in the current working directory.
-2. Run `make bernoulli` to build the executable.
-3. After compiliation, run the executable in the terminal `./bernoulli`.
+The Bernoulli model in the [examples](/examples/bernoulli) folder demonstrates the basic functionality of ReddingStan. This model is the same one used in the [CmdStan](https://github.com/stan-dev/cmdstan) documentation. To run ReddingStan: 
+1. Change the working directory to the `redding-stan` repository.
+2. Run `make examples/bernoulli/bernoulli` to build the executable.
+3. After compiliation, run the executable with `examples/bernoulli/bernoulli`.
 4. If successful, the user will see the startup message and the prompt, `[redding]$ `; if unsuccessful, the user will see an error message indicating that the program could not start.
 5. Inside the program, one can enter `list` to see a list of commands printed to the console: `[redding]$ list`.
-6. To obtain the quantities of interest, initialize the model by loading in the data: `[redding]$ load bernoulli.data.R`. The program will return a message indicating success or failure. 
-7. Once the model has been initialized, the user can obtain the log probability density and gradient at a given parameter value: `[redding]$ eval 0.2`. The output will print the (1) log probability, (2) the gradient, and (3) the execution time, respectively, line by line. 
+6. To obtain the quantities of interest, initialize the model by loading in the data: `[redding]$ load examples/bernoulli/bernoulli.data.R`. The program will return a message indicating success or failure. 
+7. Once the model has been initialized, the user can obtain the log probability density and gradient at a given parameter value: `[redding]$ eval_J_true 0.2`. The output will print the (1) log probability, (2) the gradient, (3) the execution time, and (4) any messages from the Stan program, respectively, line by line. 
 8. To exit the program, simply enter quit: `[redding]$ quit`.
+
+See the [ReddingStan Tutorial](/examples/demo.md) page for more information on using ReddingStan from R and Python.
 
 # Contributing
 

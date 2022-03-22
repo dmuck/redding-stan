@@ -5,7 +5,7 @@ ReddingStan is a command-line program that smuggles log probabilities and gradie
 
 ## Why Redding?  
 
-Previously the log probabilities, gradients, and Jacobian adjustments for parameters were difficult to extract from a Stan program despite their fundamental role in evaluating probabilistic models. Users interested in these quantities have had to rely on methods developed for the [RStan](https://mc-stan.org/users/interfaces/rstan.html) and [PyStan](https://mc-stan.org/users/interfaces/pystan.html) interaces.  
+Previously the log probabilities, gradients, and Jacobian adjustments for parameters were difficult to extract from a Stan program despite their fundamental role in evaluating probabilistic models. Users interested in these quantities have had to rely on methods developed for the [RStan](https://mc-stan.org/users/interfaces/rstan.html) and [PyStan](https://mc-stan.org/users/interfaces/pystan.html) interfaces.  
 
 ReddingStan offers a solution by providing direct access to these quantities from the command-line. In that sense, ReddingStan is a smuggling operation&mdash;not unlike those run by the character played by Morgan Freeman, [Ellis Boyd "Red" Redding](https://shawshank.fandom.com/wiki/Ellis_Boyd_%27Red%27_Redding), in the classic film *The Shawshank Redemption*.
 
@@ -14,7 +14,7 @@ ReddingStan offers a solution by providing direct access to these quantities fro
 
 1. Clone the repository.
 2. Run `make check` and, if prompted, run `make install`.
-3. Execute `bin/stanc --version`. This should show something like `stanc3 v2.29.0-rc2 (Unix)`.
+3. Execute `bin/stanc --version`. This should show something like `stanc3 v2.29.1 (Unix)`.
 4. Run `make check` to verify that installation was successful. 
 
 

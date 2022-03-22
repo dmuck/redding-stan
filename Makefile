@@ -3,7 +3,7 @@ help: ## First target is the default make target
 
 PHONY: help install uninstall clean check
 
-STAN_VERSION = v2.29.0-rc2
+STAN_VERSION = v2.29.1
 STANCFLAGS ?= --warn-pedantic
 
 CXXFLAGS = -I src

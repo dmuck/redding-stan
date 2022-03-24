@@ -3,6 +3,8 @@
 /bin/stanc
 /bin/stanc.exe
 
+/examples/*/*
+
 *.o
 *.d
 *.Rhistory

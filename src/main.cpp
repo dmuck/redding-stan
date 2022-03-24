@@ -10,7 +10,6 @@
 #include <stan/io/empty_var_context.hpp>
 #include <redding/helper.hpp>
 
-
 int main(int argc, char* argv[]) {
   const std::chrono::time_point<std::chrono::system_clock> start_time
     = std::chrono::system_clock::now();

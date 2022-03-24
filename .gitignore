@@ -3,5 +3,10 @@
 /bin/stanc
 /bin/stanc.exe
 
-*.o
+/examples/*/*
 
+*.o
+*.d
+*.Rhistory
+
+.DS_Store

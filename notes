@@ -1,0 +1,41 @@
+# Clone the redding-stan repo.
+# Big! Takes a while, by far the longest step.
+
+git clone https://github.com/dmuck/redding-stan --recursive redding-stan
+
+cd redding-stan
+
+# Uncomment the line CXX=clang++ if so desired in makefile
+
+make check
+
+# If prompted: make install
+
+bin/stanc --version
+
+make examples/bernoulli/bernoulli
+
+# Start redding-stan:
+
+rob@Rob-M1 redding-stan % ./examples/bernoulli/bernoulli   
+
+ReddingStan version 1.0
+
+ReddingStan is free software and comes with ABSOLUTELY NO WARRANTY.
+
+Type 'help' for some help, 'list' a list of commands.
+
+[redding]$ load examples/bernoulli/bernoulli.data.R
+[INFO] model initialized with data from "examples/bernoulli/bernoulli.data.R"
+
+[redding]$ eval_J_true 0.2
+-8.97767
+-3.59801
+48
+""
+[redding]$ eval_J_true 0.3
+-9.35226
+-3.89331
+18
+""
+[redding]$ quit

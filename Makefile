@@ -6,9 +6,6 @@ PHONY: help install uninstall clean check
 STAN_VERSION = v2.29.1
 STANCFLAGS ?= --warn-pedantic
 
-# Change the C++ compiler (c++ or clang++)
-# CXX=clang++
-
 CXXFLAGS = -I src
 CXXFLAGS += -I stan/src -I stan/lib/stan_math
 CXXFLAGS += -I stan/lib/stan_math/lib/eigen_3.3.9 
@@ -27,7 +24,7 @@ LIBRARY_SUFFIX = $(if $(filter linux,$(OS_TAG)),so.2,dylib)
 TBB_LIBRARIES = $(if $(filter linux,$(OS_TAG)),tbb,tbb tbbmalloc tbbmalloc_proxy)
 TBB_LIBRARIES := $(TBB_LIBRARIES:%=$(MATH)/lib/tbb/lib%.$(LIBRARY_SUFFIX))
 
-LDLIBS = src/main.o $(TBB_LIBRARIES) -Wl,-L,$(MATH)/lib/tbb -Wl,-rpath,$(MATH)/lib/tbb
+LDLIBS = src/main.o $(TBB_LIBRARIES) -Wl,-L,"$(abspath $(MATH)/lib/tbb)" -Wl,-rpath,"$(abspath $(MATH)/lib/tbb)"
 LINK.o = $(LINK.cpp)
 
 ifeq (,$(filter $(MAKECMDGOALS),help install uninstall clean check))

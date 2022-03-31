@@ -6,9 +6,6 @@ PHONY: help install uninstall clean check
 STAN_VERSION = v2.29.1
 STANCFLAGS ?= --warn-pedantic
 
-# Change the C++ compiler (c++ or clang++)
-# CXX=clang++
-
 CXXFLAGS = -I src
 CXXFLAGS += -I stan/src -I stan/lib/stan_math
 CXXFLAGS += -I stan/lib/stan_math/lib/eigen_3.3.9 

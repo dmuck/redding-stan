@@ -367,9 +367,10 @@ Type 'help' for some help, 'list' a list of commands.
 			    const std::chrono::steady_clock::time_point& start,
 			    const std::chrono::steady_clock::time_point& end,
 			    const std::string& message) {
+    Eigen::IOFormat transpose_column_vector(Eigen::StreamPrecision, 0, " ", " ");
     std::stringstream msg;
     msg << value << "\n"
-	<< gradient << "\n"
+	<< gradient.format(transpose_column_vector) << "\n" 
 	<< std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n"
 	<< "\"" << trim(message) << "\"";
     return msg.str();

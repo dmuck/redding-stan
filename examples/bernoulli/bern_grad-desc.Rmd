@@ -1,0 +1,208 @@
+---
+title: "Gradient Descent for the Bernoulli Model"
+subtitle: "Using ReddingStan in R"
+author: "Dan Muck"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output: html_document
+---
+
+
+
+# Setup
+
+It's possible to run ReddingStan within an R environment with the `processx` [library](LINK.ME). To start a new background process, the executable should already be built and ready to run. 
+
+Using the Bernoulli model as an example, it would look like this:
+
+```{r}
+library(processx)
+
+path_executable <- './bernoulli'
+
+redding <- process$new(path_executable, stdout = "|", stdin = "|", stderr = "|")
+```
+
+The background process is stored in the R environment as `redding`; it is an object that can be called upon to read and write input to the terminal. Check the status of this process with 
+
+```{r, eval=F}
+redding$is_alive()
+```
+
+and end the process with
+
+```{r, eval=F}
+redding$kill()
+```
+
+
+# Bernoulli Model
+
+ReddingStan facilitates algorithmic development by smuggling log probability and gradient information out of a Stan program. 
+
+To start with a simple example, the Bernoulli model in Stan will help illustrate the utility of ReddingStan. 
+
+Though a bit contrived, this example will demonstrate how to conduct gradient descent on a single-parameter model. The Bernoulli model in Stan is written as
+
+```{r}
+writeLines(readLines('bernoulli.stan'))
+```
+
+where the parameter $\theta$ takes a uniform prior between 0 and 1. The data used to initialize this model in Stan is stored in the `bernoulli.data.R` file: 
+
+```{r, warning=FALSE}
+writeLines(readLines('bernoulli.data.R'))
+```
+
+In practice, one wouldn't conduct gradient descent on this model; there are far more efficient ways to evaluate $\theta$. That is, 
+
+```{r, eval = F}
+boot::logit(0.2)
+```
+
+which equals `r boot::logit(0.2)` on the logit scale. 
+
+### Gradient Descent using ReddingStan
+
+First, load the `processx` library, source in some helper functions, and initialize the model with the data: 
+
+```{r, message=F}
+# Source helper functions
+source('~/redding-stan/src/helpers.R')
+
+# Start process
+redding <- process$new(path_executable, stdout = "|", stdin = "|", stderr = "|")
+
+# Load data into the model
+redding$write_input("load ./bernoulli.data.R\n")
+```
+
+The helper function, `is_model_initialized()`, will indicate whether the data has been loaded and the model is ready to evaluate: 
+
+```{r}
+is_model_initialized()
+```
+
+Now that the model is ready to go, it's time to set some initial values for the algorithm. First, extract the number of (unconstrained) parameters from the Stan model 
+
+```{r}
+# Store the number of parameters 
+N <- count_unconstrained_params()
+```
+
+and use that to generate random parameter value(s) for the `N` number of parameters, which in this case will be one: 
+
+```{r}
+# Draw N values from a uniform distribution
+theta_init <- runif(N)
+
+# Transform the Bernoulli logit model
+theta_logit <- boot::logit(theta_init)
+
+# Step size
+alpha <- 0.1
+
+# Set limit on number of steps
+max_iter <- 1000
+
+# Set starting values
+t <- theta_logit
+iter <- 0
+```
+
+Now it's time to conduct gradient descent using ReddingStan. ReddingStan provides the gradient information necessary for this algorithm, and it can be extracted using the helper function `get_gradient()`. The following code illustrates how:
+
+```{r}
+# Iterate until some conditions are met
+while(TRUE)  {
+  
+  gradient <- get_gradient(t)
+  
+  t_plus_1 <- t + alpha*gradient 
+  
+  if ( iter >= max_iter | (t - t_plus_1)**2 < 1e-08) {
+    break
+  }
+  
+  t = t_plus_1
+  iter = iter + 1
+}
+
+```
+
+The `get_gradient()` function handles the input and output accordingly:
+
+```{r}
+get_gradient
+```
+
+
+Note that the default command is set to `"eval_J_true"` and the value it takes is the vector of parameter values to be evaluated. The function returns the gradient at the given value(s). 
+
+How did the algorithm do? Given the stopping criteria, the algorithm converged on the value(s) of `t` in `iter` steps:
+
+```{r}
+c(t)
+iter
+```
+
+But wait! One might ask, why does the value come out to `r c(t)` when above it was `r boot::logit(0.2)`?
+
+The answer lies in the Jacobian adjustment! By default, ReddingStan evaluates the parameters and includes the Jacobian adjustment---hence the "J_true" in `eval_J_true`. Thus, 
+
+```{r}
+theta_J <- exp(t) / (1 + exp(t))
+c(theta_J, boot::logit(theta_J))
+```
+differs from the original values above (0.2, -1.386). To obtain those estimates, change the `command` parameter in the `get_gradient()` function and rerun the algorithm:
+
+```{r reset_init, echo=F}
+# ...reset the init values...
+
+# Draw N values from a uniform distribution
+theta_init <- runif(N)
+
+# Transform the Bernoulli logit model
+theta_logit <- boot::logit(theta_init)
+
+# Step size
+alpha <- 0.1
+
+# Set limit on number of steps
+max_iter <- 1000
+
+# Set starting values
+t <- theta_logit
+iter <- 0
+```
+
+
+```{r}
+# Iterate until some conditions are met
+while(TRUE)  {
+  
+  gradient <- get_gradient(t, command="eval_J_false")
+  
+  t_plus_1 <- t + alpha*gradient 
+  
+  if ( iter >= max_iter | (t - t_plus_1)**2 < 1e-08) {
+    break
+  }
+  
+  t = t_plus_1
+  iter = iter + 1
+}
+
+```
+
+After `r iter` steps, without the Jacobian adjustment, the expected value is
+
+```{r}
+theta_J_false <- exp(t) / (1 + exp(t))
+c(theta_J_false, boot::logit(theta_J_false))
+```
+
+which are the original values of theta calculated above.
+
+
+
+

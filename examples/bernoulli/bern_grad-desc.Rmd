@@ -6,42 +6,20 @@ date: '`r format(Sys.Date(), "%B %d, %Y")`'
 output: html_document
 ---
 
+# Disclaimer
 
+Note that this is a work-in-progress. Once completed, it will be posted on the Github repo as an html file.
 
-# Setup
+# Gradient Descent with ReddingStan
 
-It's possible to run ReddingStan within an R environment with the `processx` [library](LINK.ME). To start a new background process, the executable should already be built and ready to run. 
+ReddingStan facilitates algorithmic development by smuggling log probability and gradient information out of a Stan program. This page demonstrates how one would use ReddingStan in a workflow in R. 
 
-Using the Bernoulli model as an example, it would look like this:
-
-```{r}
-library(processx)
-
-path_executable <- './bernoulli'
-
-redding <- process$new(path_executable, stdout = "|", stdin = "|", stderr = "|")
-```
-
-The background process is stored in the R environment as `redding`; it is an object that can be called upon to read and write input to the terminal. Check the status of this process with 
-
-```{r, eval=F}
-redding$is_alive()
-```
-
-and end the process with
-
-```{r, eval=F}
-redding$kill()
-```
+Though a bit contrived, the example below will demonstrate how to conduct gradient descent on a single-parameter model.
 
 
 # Bernoulli Model
 
-ReddingStan facilitates algorithmic development by smuggling log probability and gradient information out of a Stan program. 
-
-To start with a simple example, the Bernoulli model in Stan will help illustrate the utility of ReddingStan. 
-
-Though a bit contrived, this example will demonstrate how to conduct gradient descent on a single-parameter model. The Bernoulli model in Stan is written as
+The Bernoulli model in Stan is written as
 
 ```{r}
 writeLines(readLines('bernoulli.stan'))
@@ -61,16 +39,35 @@ boot::logit(0.2)
 
 which equals `r boot::logit(0.2)` on the logit scale. 
 
-### Gradient Descent using ReddingStan
+# Using ReddingStan for Gradient Descent
 
-First, load the `processx` library, source in some helper functions, and initialize the model with the data: 
+## Setup
+
+
+Though designed as a command-line program, it's possible to run ReddingStan within an R environment with the `processx` [library](https://processx.r-lib.org/). 
+
+To start a new background process, provide the path to the executable  
+
+```{r}
+library(processx)
+path_executable <- './bernoulli'
+
+redding <- process$new(path_executable, stdout = "|", stdin = "|", stderr = "|")
+```
+
+The background process is stored in the R environment as `redding`; it is an object that can be called upon to read and write input to the terminal. Check the status of this process with 
+
+```{r, eval=F}
+redding$is_alive()
+```
+
+which will return `TRUE` if the process is up and running. 
+
+After loading the `processx` library and starting the process, source in some helper functions and initialize the Bernoulli model with the data: 
 
 ```{r, message=F}
 # Source helper functions
 source('~/redding-stan/src/helpers.R')
-
-# Start process
-redding <- process$new(path_executable, stdout = "|", stdin = "|", stderr = "|")
 
 # Load data into the model
 redding$write_input("load ./bernoulli.data.R\n")
@@ -82,14 +79,19 @@ The helper function, `is_model_initialized()`, will indicate whether the data ha
 is_model_initialized()
 ```
 
-Now that the model is ready to go, it's time to set some initial values for the algorithm. First, extract the number of (unconstrained) parameters from the Stan model 
+
+## Gradient Descent Algorithm
+
+Now that the model is ready to go, it's time to set some initial values for the algorithm. 
+
+First, extract the number of (unconstrained) parameters from the Stan model
 
 ```{r}
 # Store the number of parameters 
 N <- count_unconstrained_params()
 ```
 
-and use that to generate random parameter value(s) for the `N` number of parameters, which in this case will be one: 
+Second, use that to generate random parameter value(s) for the `N` number of parameters, which in this case will be one: 
 
 ```{r}
 # Draw N values from a uniform distribution
@@ -109,7 +111,9 @@ t <- theta_logit
 iter <- 0
 ```
 
-Now it's time to conduct gradient descent using ReddingStan. ReddingStan provides the gradient information necessary for this algorithm, and it can be extracted using the helper function `get_gradient()`. The following code illustrates how:
+Now it's time to conduct gradient descent using ReddingStan. 
+
+ReddingStan provides the gradient information necessary for this algorithm, and it can be extracted using the helper function `get_gradient()`. The following code illustrates how:
 
 ```{r}
 # Iterate until some conditions are met

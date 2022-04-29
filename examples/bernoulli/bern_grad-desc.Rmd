@@ -8,7 +8,7 @@ output: html_document
 
 # Disclaimer
 
-Note that this is a work-in-progress. Once completed, it will be posted on the Github repo as an html file.
+Note that this is a work-in-progress.
 
 # Gradient Descent with ReddingStan
 

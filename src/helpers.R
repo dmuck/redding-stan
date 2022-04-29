@@ -1,4 +1,4 @@
-# helpers.R
+# ~/redding-stan/src/helpers.R
 
 count_unconstrained_params <- function() { 
   # call process and return number of parameters;

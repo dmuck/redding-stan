@@ -1,8 +1,12 @@
-# Using ReddingStan from R and Python
+# Using ReddingStan in R and Python
 
-This page demonstrates the use of ReddingStan from R and Python. 
+This page provides information on using ReddingStan inside R and Python environments. Extended examples can be found in the [`bernoulli`](./bernoulli) and [`eight-schools`](./eight-schools) sub-folders. 
 
 ## R
+
+For a set of helper functions that assist with using ReddingStan in R, make sure to source the following script into the R environment [`src/helpers.R`](../src/helpers.R).
+
+### The `processx` library
 
 To run `ReddingStan` from an R session, ensure that the library [`processx`](https://processx.r-lib.org/) is installed. Here's the same example from the [ReddingStan homepage](../README.md):
 
@@ -11,13 +15,15 @@ library(processx)
 
 filename <- './bernoulli/bernoulli'
 redding <- processx::process$new(filename, stdout = "|", stdin = "|", stderr = "|")
-redding$read_output_lines()
+redding$read_output()
 
 redding$write_input("load ./bernoulli/bernoulli.data.R\n")
-redding$read_output_lines()
+redding$read_output()
 redding$write_input("eval 0.2\n")
 redding$read_output()
 ```
+
+### The `rstudioapi` library
 
 It is also possible to utilize RStudio's built-in terminal using the [`rstudioapi`](https://rstudio.github.io/rstudio-extensions/rstudioapi.html) library:
 
@@ -39,7 +45,6 @@ rstudioapi::terminalSend(redding, "eval 0.2\n")
 
 # store the results 
 eval02 <- rstudioapi::terminalBuffer(redding)[1:4]
-eval02
 
 # end the process
 rstudioapi::terminalKill(redding)
@@ -48,8 +53,7 @@ rstudioapi::terminalKill(redding)
 
 
 
-
-
 ## Python
 
-Use the [`subprocess`](https://docs.python.org/3/library/subprocess.html) module to run `ReddingStan` from Python.
+To use ReddingStan in a Python environment, it is recommended to use the [`subprocess`](https://docs.python.org/3/library/subprocess.html) module.
+

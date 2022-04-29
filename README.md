@@ -2,6 +2,7 @@
 
 ReddingStan is a command-line program that smuggles log probabilities and gradients out of a [Stan](https://mc-stan.org/) program. It utilizes Stan's [Math](https://arxiv.org/abs/1509.07164) library in a way that facilitates algorithmic prototyping. 
 
+For an introduction to the project, see the associated [blog post](https://bayesianops.medium.com/smuggling-log-probability-and-gradients-out-of-stan-programs-reddingstan-ff94afc56f5e).
 
 ## Why Redding?  
 
@@ -51,7 +52,7 @@ The Bernoulli model in the [examples](/examples/bernoulli) folder demonstrates t
 7. Once the model has been initialized, the user can obtain the log probability density and gradient at a given parameter value: `[redding]$ eval_J_true 0.2`. The output will print the (1) log probability, (2) the gradient, (3) the execution time, and (4) any messages from the Stan program, respectively, line by line. 
 8. To exit the program, simply enter quit: `[redding]$ quit`.
 
-See the [ReddingStan Tutorial](/examples/demo.md) page for more information on using ReddingStan from R and Python.
+See the [ReddingStan Tutorial](/examples/demo.md) page for more information on using ReddingStan from R and Python. 
 
 # Contributing
 

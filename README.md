@@ -4,6 +4,8 @@ ReddingStan is a command-line program that smuggles log probabilities and gradie
 
 For an introduction to the project, see the associated [blog post](https://bayesianops.medium.com/smuggling-log-probability-and-gradients-out-of-stan-programs-reddingstan-ff94afc56f5e).
 
+For a full-featured clone of ReddingStan, please see [Stan Model Server](https://github.com/bob-carpenter/stan-model-server). 
+
 ## Why Redding?  
 
 Previously the log probabilities, gradients, and Jacobian adjustments for parameters were difficult to extract from a Stan program despite their fundamental role in evaluating probabilistic models. Users interested in these quantities have had to rely on methods developed for the [RStan](https://mc-stan.org/users/interfaces/rstan.html) and [PyStan](https://mc-stan.org/users/interfaces/pystan.html) interfaces.  

@@ -1,10 +1,10 @@
 # ReddingStan
 
+**NOTE: ReddingStan is no longer under active development. For a full-featured clone of ReddingStan, please see [Stan Model Server](https://github.com/bob-carpenter/stan-model-server).**
+
 ReddingStan is a command-line program that smuggles log probabilities and gradients out of a [Stan](https://mc-stan.org/) program. It utilizes Stan's [Math](https://arxiv.org/abs/1509.07164) library in a way that facilitates algorithmic prototyping. 
 
 For an introduction to the project, see the associated [blog post](https://bayesianops.medium.com/smuggling-log-probability-and-gradients-out-of-stan-programs-reddingstan-ff94afc56f5e).
-
-For a full-featured clone of ReddingStan, please see [Stan Model Server](https://github.com/bob-carpenter/stan-model-server). 
 
 ## Why Redding?  
 
